@@ -26,17 +26,10 @@ export async function main(ns) {
 	ns.tprint(`Purchasing servers ${ram2} GB.`);
 	ns.exec(purchase_server, 'home', 1, ram2);
 
-	while(ns.getHackingLevel() < 600 || !ns.serverExists('the-hub') || !ns.hasRootAccess('the-hub')) {
+	while(ns.getHackingLevel() < 1000 || !ns.serverExists('clarkinc') || !ns.hasRootAccess('clarkinc')) {
 		await ns.sleep(60000);
 	}
-	ns.tprint(`Deploying hacking script targeting 'the-hub'.`);
+	ns.tprint(`Deploying hacking script targeting 'clarkinc'.`);
 	ns.scriptKill(deploy, 'home');
-	ns.exec(deploy, 'home', 1, 'the-hub');
-
-	while(ns.getHackingLevel() < 1000 || !ns.serverExists('alpha-ent') || !ns.hasRootAccess('alpha-ent')) {
-		await ns.sleep(60000);
-	}
-	ns.tprint(`Deploying hacking script targeting 'alpha-ent'.`);
-	ns.scriptKill(deploy, 'home');
-	ns.exec(deploy, 'home', 1, 'alpha-ent');
+	ns.exec(deploy, 'home', 1, 'clarkinc');
 }

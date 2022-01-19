@@ -1,24 +1,24 @@
 /** @param {NS} ns **/
 export function root(ns, target) {
-	if (ns.hasRootAccess(server)) {
+	if (ns.hasRootAccess(target)) {
 		return;
 	}
 	if (ns.fileExists('BruteSSH.exe')) {
-		ns.brutessh(server);
+		ns.brutessh(target);
 	}
 	if (ns.fileExists('FTPCrack.exe')) {
-		ns.ftpcrack(server);
+		ns.ftpcrack(target);
 	}
 	if (ns.fileExists('relaySMTP.exe')) {
-		ns.relaysmtp(server);
+		ns.relaysmtp(target);
 	}
 	if (ns.fileExists('HTTPWorm.exe')) {
-		ns.httpworm(server);
+		ns.httpworm(target);
 	}
 	if (ns.fileExists('SQLInject.exe')) {
-		ns.sqlinject(server);
+		ns.sqlinject(target);
 	}
-	ns.nuke(server);
+	ns.nuke(target);
 }
 
 export async function main(ns) {
