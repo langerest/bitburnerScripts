@@ -1,12 +1,17 @@
 import { deploy } from '/scripts/deploy.js'
 import { list_servers } from '/scripts/opened-servers.js'
+import {root} from '/scripts/root.js'
 
 /** @param {NS} ns **/
 export async function main(ns) {
     const target = ns.args[0];
     ns.tprint(`target: ${target}`);
-    const script = "/scripts/early-hack.js";
+    const script = "/scripts/basic-hack.js";
     const home_reserved_mem = 200;
+
+    if (!ns.hasRootAccess(target)) {
+        root(ns, target);
+    }
 
     if (!ns.isRunning(script, 'home', target)) {
         if(ns.scriptRunning(script, 'home')) {
@@ -20,7 +25,7 @@ export async function main(ns) {
         var servers = list_servers(ns);
         var opened_servers = [];
         var num_port_program = ns.fileExists('BruteSSH.exe') + ns.fileExists('FTPCrack.exe') + ns.fileExists('relaySMTP.exe') + ns.fileExists('HTTPWorm.exe') + ns.fileExists('SQLInject.exe');
-        
+
         for (const server of servers) {
             if (server == 'home') {
                 continue;
@@ -28,24 +33,7 @@ export async function main(ns) {
             if (!ns.hasRootAccess(server)) {
                 var num_port = ns.getServerNumPortsRequired(server);
                 if (num_port <= num_port_program) {
-                    if (num_port > 0) {
-                        if(ns.fileExists('BruteSSH.exe')) {
-                            ns.brutessh(server);
-                        }
-                        if(ns.fileExists('FTPCrack.exe')) {
-                            ns.ftpcrack(server);
-                        }
-                        if(ns.fileExists('relaySMTP.exe')) {
-                            ns.relaysmtp(server);
-                        }
-                        if(ns.fileExists('HTTPWorm.exe')) {
-                            ns.httpworm(server);
-                        }
-                        if(ns.fileExists('SQLInject.exe')) {
-                            ns.sqlinject(server);
-                        }
-                    }
-                    ns.nuke(server);
+                    root(ns, server);
                     opened_servers.push(server);
                 }
             }
