@@ -1,35 +1,83 @@
 /** @param {NS} ns **/
 export async function main(ns) {
 	const deploy = '/scripts/deploy-hack.js';
+	const batch = '/scripts/deploy-batch-hack.js';
 	const purchase_server = '/scripts/purchase-server.js';
 	const tor_manager = '/scripts/tor-manager.js';
 	const program_manager = 'scripts/program_manager.js';
-	const ram1 = 256;
-	const ram2 = 8192;
-	ns.tprint(`Deploying hacking script targeting 'n00dles'.`);
-	ns.exec(deploy, 'home', 1, 'n00dles');
-	await ns.sleep(1000);
-	ns.exec(tor_manager, 'home', 1, '-c');
-	ns.exec(program_manager, 'home', 1, '-c');
+	const ram1 = 512;
+	const ram2 = 65536;
+
+	var target = 'n00dles';
+	ns.tprint(`Deploying hacking script targeting '${target}'.`);
+	ns.run(deploy, 1, target);
+	//ns.exec(tor_manager, 'home', 1, '-c');
+	//ns.exec(program_manager, 'home', 1, '-c');
 	ns.tprint(`Purchasing servers ${ram1} GB.`);
-	ns.exec(purchase_server, 'home', 1, ram1);
-	while(ns.getHackingLevel() < 50) {
-		await ns.sleep(60000);
-	}
-	ns.tprint(`Deploying hacking script targeting 'joesguns'.`);
-	ns.scriptKill(deploy, 'home');
-	ns.exec(deploy, 'home', 1, 'joesguns');
-	while(ns.getPurchasedServers().length < ns.getPurchasedServerLimit() || ns.getServerMoneyAvailable('home') < 3.0e8) {
-		await ns.sleep(60000);
-	}
+	var pid = ns.run(purchase_server, 1, ram1);
 
+	var batch_target = 'harakiri-sushi';
+	while (ns.getHackingLevel() < ns.getServerRequiredHackingLevel(batch_target) || !ns.hasRootAccess(batch_target)) {
+		await ns.sleep(60000);
+	}
+	ns.tprint(`Deploying batch hacking script targeting '${batch_target}'.`);
+	ns.scriptKill(deploy, 'home');
+	ns.run(deploy, 1, target, ram1);
+	var batch_pid = ns.run(batch, 1, batch_target, ram1);
+	// while(ns.getPurchasedServers().length < ns.getPurchasedServerLimit() || ns.getServerMoneyAvailable('home') < 3.0e8) {
+	// 	await ns.sleep(60000);
+	// }
+	while ( ns.isRunning(pid)) {
+		if (!ns.isRunning(batch_pid)) {
+			batch_pid = ns.run(batch, 1, batch_target, ram1);
+		}
+		await ns.sleep(10000);
+	}
+	
+	//batch_target = 'zer0';
+	//batch_target = 'phantasy';
+	batch_target = 'omega-net';
+	while (ns.getHackingLevel() < ns.getServerRequiredHackingLevel(batch_target) || !ns.hasRootAccess(batch_target)) {
+		await ns.sleep(60000);
+	}
+	ns.tprint(`Deploying batch hacking script targeting '${batch_target}'.`);
+	ns.scriptKill(deploy, 'home');
+	ns.run(deploy, 1, target, ram1);
+	ns.scriptKill(batch, 'home');
+	ns.run(batch, 1, batch_target, ram1);
+
+	while (ns.getServerMoneyAvailable('home') < ns.getPurchasedServerCost(ram2) * 25) {
+		await ns.sleep(60000);
+	}
+	
+	//batch_target = 'phantasy';
+	//batch_target = 'omega-net';
+	//batch_target = 'the-hub';
+	//batch_target = 'alpha-ent';
+	batch_target = '4sigma';
+	while (ns.getHackingLevel() < ns.getServerRequiredHackingLevel(batch_target) || !ns.hasRootAccess(batch_target)) {
+		await ns.sleep(60000);
+	}
 	ns.tprint(`Purchasing servers ${ram2} GB.`);
-	ns.exec(purchase_server, 'home', 1, ram2);
-
-	while(ns.getHackingLevel() < 1000 || !ns.serverExists('clarkinc') || !ns.hasRootAccess('clarkinc')) {
-		await ns.sleep(60000);
+	pid = ns.run(purchase_server, 1, ram2);
+	while (ns.isRunning(pid)) {
+		await ns.sleep(5000);
 	}
-	ns.tprint(`Deploying hacking script targeting 'clarkinc'.`);
-	ns.scriptKill(deploy, 'home');
-	ns.exec(deploy, 'home', 1, 'clarkinc');
+	ns.tprint(`Deploying batch hacking script targeting '${batch_target}'.`);
+	ns.scriptKill(batch, 'home');
+	ns.run(batch, 1, batch_target, ram2);
+
+	// while(ns.getHackingLevel() < 1000 || !ns.serverExists('clarkinc') || !ns.hasRootAccess('clarkinc')) {
+	// 	await ns.sleep(60000);
+	// }
+	// ns.tprint(`Deploying batch hacking script targeting 'clarkinc'.`);
+	// ns.scriptKill(deploy, 'home');
+	// ns.run(deploy, 1, 'joesguns', batch_ram);
+	// ns.run(batch, 1, 'clarkinc');
+	// while(ns.getHackingLevel() < 4000 || !ns.serverExists('ecorp') || !ns.hasRootAccess('ecorp') || ns.isRunning(pid)) {
+	// 	await ns.sleep(60000);
+	// }
+	// ns.tprint(`Deploying batch hacking script targeting 'ecorp'.`);
+	// ns.scriptKill(batch, 'home');
+	// ns.run(batch, 1, 'ecorp');
 }

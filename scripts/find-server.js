@@ -31,11 +31,17 @@ export async function main(ns) {
     }
 
     recursiveScan(ns, '', 'home', server, route);
-    for (const i in route) {
-        await ns.sleep(500);
-        const extra = i > 0 ? "└ " : "";
-        ns.tprint(`${" ".repeat(i)}${extra}${route[i]}`);
+
+    var output = '';
+    for (const medium of route) {
+        if (medium == 'home') {
+            output = output.concat(`home;`);
+        }
+        else {
+            output = output.concat(`connect ${medium};`);
+        }
     }
+    ns.tprint(output);
 }
 
 export function autocomplete(data, args) {

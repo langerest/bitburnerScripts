@@ -1,7 +1,7 @@
 /** @param {NS} ns **/
 export function root(ns, target) {
 	if (ns.hasRootAccess(target)) {
-		return;
+		return true;
 	}
 	if (ns.fileExists('BruteSSH.exe')) {
 		ns.brutessh(target);
@@ -18,7 +18,14 @@ export function root(ns, target) {
 	if (ns.fileExists('SQLInject.exe')) {
 		ns.sqlinject(target);
 	}
-	ns.nuke(target);
+	try {
+		ns.nuke(target);
+		return true;
+	}
+	catch (error) {
+		ns.print(error);
+		return false;
+	}
 }
 
 export async function main(ns) {
