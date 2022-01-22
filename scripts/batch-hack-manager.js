@@ -9,7 +9,7 @@ export async function main(ns) {
 	const host = ns.getHostname();
 
 	//constant, potency of weaken threads
-	const threadPotencyForWeaken = 0.05;
+	const threadPotencyForWeaken = 0.05 * ns.getBitNodeMultipliers().ServerWeakenRate;
 	// two weaken threads per 10 hack threads
 	const threadHardeningForHack = 0.002;
 	// four weaken threads per 5 grow threads
@@ -31,8 +31,8 @@ export async function main(ns) {
 	const maxMoney = ns.getServerMaxMoney(target);
 	const minSecurity = ns.getServerMinSecurityLevel(target);
 
-	const step_delay = 100;
-	const delay_for_kill = 500;
+	const step_delay = 50;
+	const delay_for_kill = 200;
 	const delay_to_prevent_freeze = 20;
 
 	ns.disableLog('run');

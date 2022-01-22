@@ -19,27 +19,16 @@ export async function main(ns) {
 		}
 	}
 
-	while (true) {
-		if (ns.getServerMoneyAvailable("home") > ns.getPurchasedServerCost(ram)) {
-			var server_upgraded = false;
-			for (const server of ns.getPurchasedServers()) {
-				if (ns.getServerMaxRam(server) < ram) {
-					ns.killall(server);
-					ns.deleteServer(server);
-					var hostname = ns.purchaseServer('pserv', ram);
-					ns.tprint(`Succussfully deleted server '${server}' and purchased new server ${hostname}`);
-					server_upgraded = true;
-					break;
-				}
+	for (const server of ns.getPurchasedServers()) {
+		if (ns.getServerMaxRam(server) < ram) {
+			while (ns.getServerMoneyAvailable("home") < ns.getPurchasedServerCost(ram)) {
+				ns.print(`Current money: '${ns.getServerMoneyAvailable("home")}', Money need to buy '${ram}' GB server: ${ns.getPurchasedServerCost(ram)}`);
+				await ns.sleep(10000);
 			}
-			if (!server_upgraded) {
-				return;
-			}
-		}
-		else {
-			ns.print(`Current money: '${ns.getServerMoneyAvailable("home")}', Money need to buy '${ram}' GB server: ${ns.getPurchasedServerCost(ram)}`);
-			await ns.sleep(10000);
+			ns.killall(server);
+			ns.deleteServer(server);
+			var hostname = ns.purchaseServer('pserv', ram);
+			ns.tprint(`Succussfully deleted server '${server}' and purchased new server ${hostname}`);
 		}
 	}
-
 }

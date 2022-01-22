@@ -4,7 +4,7 @@ import { root } from '/scripts/root.js'
 /** @param {NS} ns **/
 export async function main(ns) {
 	const target = ns.args[0];
-	var min_ram = 64;
+	var min_ram = 128;
 	if (ns.args.length > 1) {
 		min_ram = ns.args[1];
 	}
@@ -13,15 +13,15 @@ export async function main(ns) {
 		root(ns, target);
 	}
 
-	const window_delay = 5000;
+	const window_delay = 3000;
 	const script_manager = "/scripts/batch-hack-manager.js";
-    const home_reserved_mem = 50;
+    const home_reserved_mem = 25;
 
 	const hack_script = '/scripts/batch-hack/hack.js';
 	const weaken_script = '/scripts/batch-hack/weaken.js';
 	const grow_script = '/scripts/batch-hack/grow.js';
 
-	if (!ns.isRunning(script_manager, 'home', target, home_reserved_mem) && ns.getServerMaxRam('home') - home_reserved_mem > 0) {
+	if (!ns.isRunning(script_manager, 'home', target, home_reserved_mem) && ns.getServerMaxRam('home') - home_reserved_mem > min_ram) {
         if(ns.scriptRunning(script_manager, 'home')) {
             ns.scriptKill(script_manager, 'home');
         }
