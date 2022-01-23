@@ -1,15 +1,25 @@
+const argSchema = [
+	['target', ''],
+	['reserved_mem', 0],
+	['server_weaken_rate', 1]
+];
+
+export function autocomplete(data, args) {
+	data.flags(argSchema);
+	return data.servers;
+}
+
 /** @param {NS} ns **/
 export async function main(ns) {
-	const target = ns.args[0];
-	var reserved_mem = 0;
-	if (ns.args.length > 1) {
-		reserved_mem = ns.args[1];
-	}
+	const args = ns.flags(argSchema);
+	const target = args['target'];
+	const reserved_mem = args['reserved_mem'];
+	const server_weaken_rate = args['server_weaken_rate'];
 
 	const host = ns.getHostname();
 
 	//constant, potency of weaken threads
-	const threadPotencyForWeaken = 0.05 * ns.getBitNodeMultipliers().ServerWeakenRate;
+	const threadPotencyForWeaken = 0.05 * server_weaken_rate;
 	// two weaken threads per 10 hack threads
 	const threadHardeningForHack = 0.002;
 	// four weaken threads per 5 grow threads
@@ -19,6 +29,7 @@ export async function main(ns) {
 	const weaken_script = '/scripts/batch-hack/weaken.js';
 	const grow_script = '/scripts/batch-hack/grow.js';
 	const basic_hack = '/scripts/basic-hack.js';
+	const manager_script = '/scripts/batch-hack-manager.js';
 
 	var timeForGrow;
 	var timeForWeaken;
@@ -27,6 +38,7 @@ export async function main(ns) {
 	const costForHack = ns.getScriptRam(hack_script);
 	const costForWeaken = ns.getScriptRam(weaken_script);
 	const costForGrow = ns.getScriptRam(grow_script);
+	const script_mem = ns.getScriptRam(manager_script);
 
 	const maxMoney = ns.getServerMaxMoney(target);
 	const minSecurity = ns.getServerMinSecurityLevel(target);
@@ -40,13 +52,25 @@ export async function main(ns) {
 
 	var script_to_kill = [hack_script, weaken_script, grow_script, basic_hack];
 
-	for (var script of script_to_kill) {
+	for (const script of script_to_kill) {
 		ns.scriptKill(script, host);
 	}
 	await ns.sleep(delay_for_kill);
 
 	while (true) {
-		var available_ram = ns.getServerMaxRam(host) - ns.getServerUsedRam(host) - reserved_mem;
+		do {
+			var script_running = false;
+			var script_to_check = [hack_script, weaken_script, grow_script];
+			for (const script of script_to_kill) {
+				if (ns.scriptRunning(script, host)) {
+					script_running = true;
+					await ns.sleep(delay_for_kill);
+					break;
+				}
+			}
+		} 
+		while (script_running)
+		var available_ram = ns.getServerMaxRam(host) - Math.max(ns.getServerUsedRam(host), reserved_mem + script_mem);
 		var currentSecurity = ns.getServerSecurityLevel(target);
 		var currentMoney = ns.getServerMoneyAvailable(target);
 		if (currentSecurity > minSecurity) {
@@ -60,7 +84,7 @@ export async function main(ns) {
 				await ns.sleep(delay);
 			}
 			catch (error) {
-				ns.tprint(error);
+				ns.print(error);
 				await ns.sleep(delay_to_prevent_freeze);
 			}
 		}
@@ -82,7 +106,7 @@ export async function main(ns) {
 				await ns.sleep(delay);
 			}
 			catch (error) {
-				ns.tprint(error);
+				ns.print(error);
 				await ns.sleep(delay_to_prevent_freeze);
 			}
 		}
@@ -140,7 +164,7 @@ export async function main(ns) {
 			var singleGrowCycleCost = costForWeaken + costForGrow * threadPotencyForWeaken / threadHardeningForGrow;
 			var growcyclesAvailable = Math.floor((available_ram - totalHackCost - threadsToWeakenFromHack * costForWeaken) / singleGrowCycleCost);
 			threadsForGrow = Math.floor(growcyclesAvailable * threadPotencyForWeaken / threadHardeningForGrow);
-			threadsToWeakenFromGrow = Math.floor((available_ram  - totalHackCost - threadsToWeakenFromHack * costForWeaken - costForGrow * threadsForGrow) / costForWeaken);
+			threadsToWeakenFromGrow = Math.floor((available_ram - totalHackCost - threadsToWeakenFromHack * costForWeaken - costForGrow * threadsForGrow) / costForWeaken);
 
 			var hack_delay = (timeForWeaken - timeForHack) - step_delay;
 			var grow_delay = (timeForWeaken - timeForGrow) + step_delay;
@@ -165,8 +189,4 @@ export async function main(ns) {
 			}
 		}
 	}
-}
-
-export function autocomplete(data, args) {
-    return data.servers;
 }

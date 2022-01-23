@@ -7,7 +7,7 @@ export async function main(ns) {
     const target = ns.args[0];
     ns.tprint(`target: ${target}`);
     const script = "/scripts/basic-hack.js";
-    const home_reserved_mem = 50;
+    const home_reserved_mem = 128;
     var max_ram = 0;
     if (ns.args.length > 1) {
         max_ram = ns.args[1];
