@@ -1,4 +1,4 @@
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 	const root_all = '/scripts/root-all.js';
 	const deploy = '/scripts/deploy-hack.js';
@@ -6,8 +6,9 @@ export async function main(ns) {
 	const batch = '/scripts/deploy-batch-hack.js';
 	const purchase_server = '/scripts/purchase-server.js';
 	const tor_manager = '/scripts/tor-manager.js';
-	const program_manager = 'scripts/program_manager.js';
-	const ram1 = 64;
+	const program_manager = 'scripts/program-manager.js';
+	const backdoor_manager = 'scripts/backdoor.js';
+	const ram1 = 128;
 	const ram2 = 512;
 	const min_batch_ram = 64;
 
@@ -16,8 +17,9 @@ export async function main(ns) {
 	var target = 'n00dles';
 	ns.tprint(`Deploying hacking script targeting '${target}'.`);
 	ns.run(deploy, 1, target);
-	//ns.exec(tor_manager, 'home', 1, '-c');
-	//ns.exec(program_manager, 'home', 1, '-c');
+	ns.run(tor_manager, 1, '-c');
+	ns.run(program_manager, 1, '-c');
+	ns.run(backdoor_manager, 1);
 	ns.tprint(`Purchasing servers ${ram1} GB.`);
 	var purchase_pid = ns.run(purchase_server, 1, ram1);
 

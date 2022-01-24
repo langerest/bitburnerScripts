@@ -1,4 +1,4 @@
-/** @param {NS} ns 
+/** @param {import("../.").NS} ns
  * the purpose of the program-manager is to buy all the programs
  * from the darkweb we can afford so we don't have to do it manually
  * or write them ourselves. Like tor-manager, this script dies a natural death
@@ -15,10 +15,20 @@ export async function main(ns) {
     do {
         foundMissingProgram = false;
         for (const prog of programNames) {
-            if (!ns.fileExists(prog, "home") && ns.purchaseProgram(prog))
-                ns.toast(`Purchased ${prog}`, 'success');
-            else if (keepRunning)
-                foundMissingProgram = true;
+            if (!ns.fileExists(prog, 'home')) {
+                try {
+                   const succuss = ns.purchaseProgram(prog);
+                   if (succuss) {
+                    ns.toast(`Purchased ${prog}.`);
+                   }
+                   else {
+                       foundMissingProgram = true;
+                   }
+                } catch (error) {
+                    ns.print(error);
+                    foundMissingProgram = true;
+                }
+            }
         }
         if (keepRunning && foundMissingProgram)
             await ns.sleep(interval);
