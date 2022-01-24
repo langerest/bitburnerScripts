@@ -4,7 +4,7 @@ import { getHackTarget } from '/scripts/hack-target-calculator.js'
 const argSchema = [
 	['min_ram', 128],
 	['max_time', 300000],
-	['kill', true]
+	['no_kill', false]
 ];
 
 export function autocomplete(data, args) {
@@ -18,7 +18,6 @@ export async function main(ns) {
 	const min_ram = args['min_ram'];
 	const max_time = args['max_time'];
 
-	const window_delay = 15000;
 	const script_manager = "/scripts/batch-hack-manager.js";
 	const home_reserved_mem = 128;
 	const server_weaken_rate = ns.getBitNodeMultipliers().ServerWeakenRate;
@@ -34,9 +33,11 @@ export async function main(ns) {
 	servers = servers.filter(server => server.hasAdminRights && (server.maxRam >= min_ram ||
 		(server.hostname == 'home' && server.maxRam >= min_ram + home_reserved_mem)));
 
-	if(!args['kill']) {
+	if(args['no_kill']) {
 		servers = servers.filter(server => !ns.scriptRunning(script_manager, server.hostname));
 	}
+
+	servers.sort((a, b) => b.hostname == 'home'?b.maxRam-home_reserved_mem:b.maxRam - a.hostname == 'home'?a.maxRam-home_reserved_mem:a.maxRam);
 
 	//ns.tprint(servers.map((a) => a.hostname));
 
@@ -67,11 +68,16 @@ export async function main(ns) {
 			return targets[a['server']].length - targets[b['server']].length;
 		})
 		//ns.tprint(target_ram_dict[ram.toString()]);
-		targets[target_ram_dict[ram.toString()][0]['server']].push(server);
+		if (target_ram_dict[ram.toString()].length > 0) {
+			targets[target_ram_dict[ram.toString()][0]['server']].push(server);
+		}
 	}
 
+	var targets_length = Object.values(targets).map((a) => a.length);
+	const window_delay = Math.max(3000, max_time / Math.max(...targets_length) / 2);
+
 	var i = 0;
-	do {
+	while (Object.keys(targets).length > 0) {
 		for (const target in targets) {
 			if (targets[target].length <= i) {
 				delete targets[target];
@@ -82,7 +88,7 @@ export async function main(ns) {
 					if (!ns.isRunning(script_manager, 'home', '--target', target, '--reserved_mem', home_reserved_mem, '--server_weaken_rate', server_weaken_rate)) {
 						ns.scriptKill(script_manager, 'home');
 						ns.scriptKill(basic_hack, 'home');
-						ns.tprint(`Launching script '${script_manager}' on server 'home' targeting '${target}''.`);
+						ns.tprint(`Launching script '${script_manager}' on server 'home' targeting '${target}'.`);
 						ns.exec(script_manager, 'home', 1, '--target', target, '--reserved_mem', home_reserved_mem, '--server_weaken_rate', server_weaken_rate);
 					}
 				}
@@ -92,14 +98,14 @@ export async function main(ns) {
 						for (const script of [script_manager, hack_script, grow_script, weaken_script]) {
 							await ns.scp(script, server.hostname);
 						}
-						ns.tprint(`Launching script '${script_manager}' on server '${server.hostname}' targeting '${target}''.`);
+						ns.tprint(`Launching script '${script_manager}' on server '${server.hostname}' targeting '${target}'.`);
 						ns.exec(script_manager, server.hostname, 1, '--target', target, '--server_weaken_rate', server_weaken_rate);
 					}
 				}
 			}
 		}
 		i++;
+		ns.tprint(`Sleep for ${ns.tFormat(window_delay, true)}.`);
 		await ns.sleep(window_delay);
 	}
-	while (Object.keys(targets).length > 0)
 }

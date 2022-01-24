@@ -100,7 +100,6 @@ export async function main(ns) {
 	const ram = ns.args[0];
 	const results = getHackTarget(ns, ram);
 	for (const result of results) {
-		ns.tprint(`${result['server']}: hack percentage: ${Math.round(result['percentage'] * 100)}%, 
-		time: ${ns.tFormat(result['time'])}, rate: ${result['rate']}`);
+		ns.tprint(`${result['server']}: hack percentage: ${Math.round(result['percentage'] * 100)}%, time: ${ns.tFormat(result['time'])}, rate: ${ns.nFormat(result['rate'], '0.000e+0')}`);
 	}
 }

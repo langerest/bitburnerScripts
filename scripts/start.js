@@ -7,9 +7,9 @@ export async function main(ns) {
 	const purchase_server = '/scripts/purchase-server.js';
 	const tor_manager = '/scripts/tor-manager.js';
 	const program_manager = 'scripts/program_manager.js';
-	const ram1 = 1024;
-	const ram2 = 8192;
-	const min_batch_ram = 128;
+	const ram1 = 64;
+	const ram2 = 512;
+	const min_batch_ram = 64;
 
 	ns.tprint(`Root all servers.`);
 	ns.run(root_all, 1);
@@ -27,23 +27,25 @@ export async function main(ns) {
 		await ns.sleep(60000);
 	}
 	ns.tprint(`Deploying batch hacking script`);
-	var batch_max_time = 30000;
+	var batch_max_time = 90000;
 	ns.scriptKill(deploy, 'home');
 	ns.run(deploy, 1, target, ram1>=min_batch_ram?ram1:min_batch_ram);
-	var batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--kill', false);
+	var batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--no_kill');
 	while ( ns.isRunning(purchase_pid)) {
 		if (!ns.isRunning(batch_pid)) {
-			batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--kill', false);
+			batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--no_kill');
 		}
 		await ns.sleep(10000);
 	}
 
 	ns.tprint(`Deploying batch hacking script`);
-	batch_max_time = 120000;
+	batch_max_time = 180000;
 	ns.scriptKill(batch, 'home');
 	ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time);
 
-	while (ns.getServerMoneyAvailable('home') < ns.getPurchasedServerCost(ram2) * 25) {
+	var extra_money_to_save = 0;
+	//var extra_money_to_save = 1.0e11; 
+	while (ns.getServerMoneyAvailable('home') < ns.getPurchasedServerCost(ram2) * 25 + extra_money_to_save) {
 		await ns.sleep(60000);
 	}
 

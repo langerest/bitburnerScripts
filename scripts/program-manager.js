@@ -4,15 +4,16 @@
  * or write them ourselves. Like tor-manager, this script dies a natural death
  * once all programs are bought. **/
 export async function main(ns) {
-    const programNames = ["BruteSSH.exe", "FTPCrack.exe", "AutoLink.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
+    const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
     const interval = 10000;
 
     const keepRunning = ns.args.length > 0 && ns.args[0] == "-c";
+    var foundMissingProgram;
     if (!keepRunning)
         ns.print(`program-manager will run once. Run with argument "-c" to run continuously.`)
 
     do {
-        let foundMissingProgram = false;
+        foundMissingProgram = false;
         for (const prog of programNames) {
             if (!ns.fileExists(prog, "home") && ns.purchaseProgram(prog))
                 ns.toast(`Purchased ${prog}`, 'success');
