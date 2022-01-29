@@ -19,7 +19,7 @@ export async function main(ns) {
 	const max_time = args['max_time'];
 
 	const script_manager = "/scripts/batch-hack-manager.js";
-	const home_reserved_mem = 128;
+	const home_reserved_mem = 32;
 	const server_weaken_rate = ns.getBitNodeMultipliers().ServerWeakenRate;
 
 	const hack_script = '/scripts/batch-hack/hack.js';

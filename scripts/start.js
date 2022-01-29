@@ -8,18 +8,21 @@ export async function main(ns) {
 	const tor_manager = '/scripts/tor-manager.js';
 	const program_manager = 'scripts/program-manager.js';
 	const backdoor_manager = 'scripts/backdoor.js';
-	const ram1 = 128;
-	const ram2 = 512;
-	const min_batch_ram = 64;
+	const player_manager = 'scripts/player-manager.js';
+	const ram1 = 32;
+	const ram2 = 128;
+	const min_batch_ram = 128;
+	const faction_to_work = 'Daedalus';
 
 	ns.tprint(`Root all servers.`);
 	ns.run(root_all, 1);
 	var target = 'n00dles';
 	ns.tprint(`Deploying hacking script targeting '${target}'.`);
 	ns.run(deploy, 1, target);
-	ns.run(tor_manager, 1, '-c');
-	ns.run(program_manager, 1, '-c');
-	ns.run(backdoor_manager, 1);
+	//ns.run(tor_manager, 1, '-c');
+	//ns.run(program_manager, 1, '-c');
+	//ns.run(backdoor_manager, 1);
+	//ns.run(player_manager, 1, faction_to_work);
 	ns.tprint(`Purchasing servers ${ram1} GB.`);
 	var purchase_pid = ns.run(purchase_server, 1, ram1);
 

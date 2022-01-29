@@ -1,13 +1,13 @@
 import { deploy } from '/scripts/deploy.js'
 import { list_servers } from '/scripts/opened-servers.js'
-import {root} from '/scripts/root.js'
+import { root } from '/scripts/root.js'
 
 /** @param {NS} ns **/
 export async function main(ns) {
     const target = ns.args[0];
     ns.tprint(`target: ${target}`);
     const script = "/scripts/basic-hack.js";
-    const home_reserved_mem = 128;
+    const home_reserved_mem = 32;
     var max_ram = 0;
     if (ns.args.length > 1) {
         max_ram = ns.args[1];
