@@ -4,6 +4,7 @@ import { getHackTarget } from '/scripts/hack-target-calculator.js'
 const argSchema = [
 	['min_ram', 128],
 	['max_time', 300000],
+	['home_reserved_ram', 32],
 	['no_kill', false]
 ];
 
@@ -17,9 +18,9 @@ export async function main(ns) {
 	const args = ns.flags(argSchema);
 	const min_ram = args['min_ram'];
 	const max_time = args['max_time'];
+	const home_reserved_ram = args['home_reserved_ram']
 
 	const script_manager = "/scripts/batch-hack-manager.js";
-	const home_reserved_mem = 32;
 	const server_weaken_rate = ns.getBitNodeMultipliers().ServerWeakenRate;
 
 	const hack_script = '/scripts/batch-hack/hack.js';
@@ -31,13 +32,13 @@ export async function main(ns) {
 	serverNames.push('home');
 	var servers = serverNames.map(ns.getServer);
 	servers = servers.filter(server => server.hasAdminRights && (server.maxRam >= min_ram ||
-		(server.hostname == 'home' && server.maxRam >= min_ram + home_reserved_mem)));
+		(server.hostname == 'home' && server.maxRam >= min_ram + home_reserved_ram)));
 
 	if(args['no_kill']) {
 		servers = servers.filter(server => !ns.scriptRunning(script_manager, server.hostname));
 	}
 
-	servers.sort((a, b) => b.hostname == 'home'?b.maxRam-home_reserved_mem:b.maxRam - a.hostname == 'home'?a.maxRam-home_reserved_mem:a.maxRam);
+	servers.sort((a, b) => b.hostname == 'home'?b.maxRam-home_reserved_ram:b.maxRam - a.hostname == 'home'?a.maxRam-home_reserved_ram:a.maxRam);
 
 	//ns.tprint(servers.map((a) => a.hostname));
 
@@ -46,7 +47,7 @@ export async function main(ns) {
 	for (const server of servers) {
 		var ram = server.maxRam;
 		if (server.hostname == 'home') {
-			ram -= home_reserved_mem;
+			ram -= home_reserved_ram;
 		}
 		if (!(ram.toString() in targets)) {
 			var target_list = getHackTarget(ns, ram);
@@ -85,11 +86,11 @@ export async function main(ns) {
 			else {
 				const server = targets[target][i];
 				if (server.hostname == 'home') {
-					if (!ns.isRunning(script_manager, 'home', '--target', target, '--reserved_mem', home_reserved_mem, '--server_weaken_rate', server_weaken_rate)) {
+					if (!ns.isRunning(script_manager, 'home', '--target', target, '--reserved_mem', home_reserved_ram, '--server_weaken_rate', server_weaken_rate)) {
 						ns.scriptKill(script_manager, 'home');
 						ns.scriptKill(basic_hack, 'home');
 						ns.tprint(`Launching script '${script_manager}' on server 'home' targeting '${target}'.`);
-						ns.exec(script_manager, 'home', 1, '--target', target, '--reserved_mem', home_reserved_mem, '--server_weaken_rate', server_weaken_rate);
+						ns.exec(script_manager, 'home', 1, '--target', target, '--reserved_mem', home_reserved_ram, '--server_weaken_rate', server_weaken_rate);
 					}
 				}
 				else {

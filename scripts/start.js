@@ -9,8 +9,9 @@ export async function main(ns) {
 	const program_manager = 'scripts/program-manager.js';
 	const backdoor_manager = 'scripts/backdoor.js';
 	const player_manager = 'scripts/player-manager.js';
-	const ram1 = 32;
-	const ram2 = 128;
+	const home_reserved_ram = 256;
+	const ram1 = 128;
+	const ram2 = 512;
 	const min_batch_ram = 128;
 	const faction_to_work = 'Daedalus';
 
@@ -18,10 +19,10 @@ export async function main(ns) {
 	ns.run(root_all, 1);
 	var target = 'n00dles';
 	ns.tprint(`Deploying hacking script targeting '${target}'.`);
-	ns.run(deploy, 1, target);
-	//ns.run(tor_manager, 1, '-c');
-	//ns.run(program_manager, 1, '-c');
-	//ns.run(backdoor_manager, 1);
+	ns.run(deploy, 1, '--target', target, '--home_reserved_ram', home_reserved_ram);
+	ns.run(tor_manager, 1, '-c');
+	ns.run(program_manager, 1, '-c');
+	ns.run(backdoor_manager, 1);
 	//ns.run(player_manager, 1, faction_to_work);
 	ns.tprint(`Purchasing servers ${ram1} GB.`);
 	var purchase_pid = ns.run(purchase_server, 1, ram1);
@@ -34,11 +35,11 @@ export async function main(ns) {
 	ns.tprint(`Deploying batch hacking script`);
 	var batch_max_time = 90000;
 	ns.scriptKill(deploy, 'home');
-	ns.run(deploy, 1, target, ram1>=min_batch_ram?ram1:min_batch_ram);
-	var batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--no_kill');
+	ns.run(deploy, 1, '--target', target, '--max_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--home_reserved_ram', home_reserved_ram);
+	var batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram, '--no_kill');
 	while ( ns.isRunning(purchase_pid)) {
 		if (!ns.isRunning(batch_pid)) {
-			batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--no_kill');
+			batch_pid = ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram, '--no_kill');
 		}
 		await ns.sleep(10000);
 	}
@@ -46,7 +47,7 @@ export async function main(ns) {
 	ns.tprint(`Deploying batch hacking script`);
 	batch_max_time = 180000;
 	ns.scriptKill(batch, 'home');
-	ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time);
+	ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
 
 	var extra_money_to_save = 0;
 	//var extra_money_to_save = 1.0e11; 
@@ -63,7 +64,7 @@ export async function main(ns) {
 	ns.tprint(`Deploying batch hacking script`);
 	batch_max_time = 600000;
 	ns.scriptKill(batch, 'home');
-	ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time);
+	ns.run(batch, 1, '--min_ram', ram1>=min_batch_ram?ram1:min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
 	ns.scriptKill(deploy, 'home');
 	ns.run(deploy_share, 1, ram1>=min_batch_ram?ram1:min_batch_ram);
 	
