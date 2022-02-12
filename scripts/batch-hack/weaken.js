@@ -4,8 +4,7 @@ export async function main(ns) {
 	var delay;
 	if (ns.args.length > 1) {
 		delay = ns.args[1];
-	}
-	else {
+	} else {
 		delay = 0;
 	}
 	await ns.sleep(delay);

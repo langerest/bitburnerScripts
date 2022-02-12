@@ -5,6 +5,7 @@
  * once all programs are bought. **/
 export async function main(ns) {
     const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
+    // const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe"];
     const interval = 10000;
 
     const keepRunning = ns.args.length > 0 && ns.args[0] == "-c";
@@ -17,13 +18,12 @@ export async function main(ns) {
         for (const prog of programNames) {
             if (!ns.fileExists(prog, 'home')) {
                 try {
-                   const succuss = ns.purchaseProgram(prog);
-                   if (succuss) {
-                    ns.toast(`Purchased ${prog}.`);
-                   }
-                   else {
-                       foundMissingProgram = true;
-                   }
+                    const succuss = ns.purchaseProgram(prog);
+                    if (succuss) {
+                        ns.toast(`Purchased ${prog}.`);
+                    } else {
+                        foundMissingProgram = true;
+                    }
                 } catch (error) {
                     ns.print(error);
                     foundMissingProgram = true;

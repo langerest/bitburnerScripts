@@ -1,4 +1,6 @@
-import { list_servers } from '/scripts/opened-servers.js' 
+import {
+    list_servers
+} from '/scripts/opened-servers.js'
 
 export function analyze_server(ns, server) {
     const ram = ns.getServerRam(server);
@@ -27,7 +29,9 @@ ${server}:
 }
 
 export async function main(ns) {
-    const args = ns.flags([["help", false]]);
+    const args = ns.flags([
+        ["help", false]
+    ]);
     const server = ns.args[0];
     if (args.help) {
         ns.tprint("This script does a more detailed analysis of a server.");
@@ -37,10 +41,9 @@ export async function main(ns) {
         return;
     }
 
-    if(server) {
+    if (server) {
         analyze_server(ns, server);
-    }
-    else {
+    } else {
         var servers = list_servers(ns);
         for (const server of servers) {
             if (ns.getPurchasedServers().includes(server)) {

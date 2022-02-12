@@ -1,6 +1,12 @@
-import { deploy } from '/scripts/deploy.js'
-import { list_servers } from '/scripts/opened-servers.js'
-import {root} from '/scripts/root.js'
+import {
+    deploy
+} from '/scripts/deploy.js'
+import {
+    list_servers
+} from '/scripts/opened-servers.js'
+import {
+    root
+} from '/scripts/root.js'
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -26,8 +32,7 @@ export async function main(ns) {
                     root(ns, server);
                     opened_servers.push(server);
                 }
-            }
-            else {
+            } else {
                 opened_servers.push(server);
             }
         }

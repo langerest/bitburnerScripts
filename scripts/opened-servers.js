@@ -18,7 +18,9 @@ export function list_servers(ns) {
 
 /** @param {NS} ns **/
 export async function main(ns) {
-    const args = ns.flags([["help", false]]);
+    const args = ns.flags([
+        ["help", false]
+    ]);
     if (args.help) {
         ns.tprint("This script lists all servers on which you can run scripts.");
         ns.tprint(`Usage: run ${ns.getScriptName()}`);

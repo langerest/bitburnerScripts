@@ -68,7 +68,7 @@ export async function main(ns) {
 					break;
 				}
 			}
-		} 
+		}
 		while (script_running)
 		var available_ram = ns.getServerMaxRam(host) - Math.max(ns.getServerUsedRam(host), reserved_mem + script_mem);
 		var currentSecurity = ns.getServerSecurityLevel(target);
@@ -82,13 +82,11 @@ export async function main(ns) {
 				var delay = timeForWeaken + delay_for_kill;
 				ns.print(`Sleep for ${ns.tFormat(delay, true)}.`);
 				await ns.sleep(delay);
-			}
-			catch (error) {
+			} catch (error) {
 				ns.print(error);
 				await ns.sleep(delay_to_prevent_freeze);
 			}
-		}
-		else if (currentMoney < maxMoney) {
+		} else if (currentMoney < maxMoney) {
 			timeForGrow = ns.getGrowTime(target);
 			timeForWeaken = ns.getWeakenTime(target);
 			var singleCycleCost = costForWeaken + costForGrow * threadPotencyForWeaken / threadHardeningForGrow;
@@ -104,13 +102,11 @@ export async function main(ns) {
 				var delay = timeForWeaken + delay_for_kill;
 				ns.print(`Sleep for ${ns.tFormat(delay, true)}.`);
 				await ns.sleep(delay);
-			}
-			catch (error) {
+			} catch (error) {
 				ns.print(error);
 				await ns.sleep(delay_to_prevent_freeze);
 			}
-		}
-		else {
+		} else {
 			timeForHack = ns.getHackTime(target);
 			timeForWeaken = ns.getWeakenTime(target);
 			timeForGrow = ns.getGrowTime(target);
@@ -149,13 +145,11 @@ export async function main(ns) {
 				if (cycleThreadsAvailable < 1) {
 					if (percentageToSteal > 1) {
 						percentageToSteal--;
-					}
-					else {
+					} else {
 						ns.tprint(`Ram of '${host}' is too small to hack '${target}'. Aborting.`);
 						return;
 					}
-				}
-				else {
+				} else {
 					perfection = true;
 				}
 			}
@@ -182,8 +176,7 @@ export async function main(ns) {
 				var delay = timeForWeaken + step_delay * 2 + delay_for_kill;
 				ns.print(`Sleep for ${ns.tFormat(delay, true)}.`);
 				await ns.sleep(delay);
-			}
-			catch (error) {
+			} catch (error) {
 				ns.tprint(error);
 				await ns.sleep(delay_to_prevent_freeze);
 			}

@@ -19,7 +19,9 @@ export function recursiveScan(ns, parent, server, target, route) {
 }
 
 export async function main(ns) {
-    const args = ns.flags([["help", false]]);
+    const args = ns.flags([
+        ["help", false]
+    ]);
     let route = [];
     let server = args._[0];
     if (!server || args.help) {
@@ -36,8 +38,7 @@ export async function main(ns) {
     for (const medium of route) {
         if (medium == 'home') {
             output = output.concat(`home;`);
-        }
-        else {
+        } else {
             output = output.concat(`connect ${medium};`);
         }
     }

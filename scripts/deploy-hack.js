@@ -1,16 +1,22 @@
-import { deploy } from '/scripts/deploy.js'
-import { list_servers } from '/scripts/opened-servers.js'
-import { root } from '/scripts/root.js'
+import {
+    deploy
+} from '/scripts/deploy.js'
+import {
+    list_servers
+} from '/scripts/opened-servers.js'
+import {
+    root
+} from '/scripts/root.js'
 
 const argSchema = [
-	['target', 'n00dles'],
-    ['max_ram', 128],
-	['home_reserved_ram', 32],
+    ['target', 'n00dles'],
+    ['max_ram', 0],
+    ['home_reserved_ram', 32],
 ];
 
 export function autocomplete(data, args) {
-	data.flags(argSchema);
-	return data.servers;
+    data.flags(argSchema);
+    return data.servers;
 }
 
 /** @param {NS} ns **/
@@ -28,10 +34,10 @@ export async function main(ns) {
     while (true) {
 
         if (!ns.isRunning(script, 'home', target)) {
-            if(ns.scriptRunning(script, 'home')) {
+            if (ns.scriptRunning(script, 'home')) {
                 ns.scriptKill(script, 'home');
             }
-            if(max_ram == 0 || ns.getServerMaxRam('home') - home_reserved_ram >= max_ram) {
+            if (max_ram == 0 || ns.getServerMaxRam('home') - home_reserved_ram < max_ram) {
                 await deploy(ns, 'home', script, [target], home_reserved_ram);
             }
         }

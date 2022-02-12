@@ -2,13 +2,13 @@ const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volha
 const design_city = "Aevum";
 const delay = 10000;
 const wilson = 'Wilson Analytics';
-const division = 'tobacco';
+const division = 'Tobacco';
 const upgrade_size = 15;
 const jobs = ['Operations', 'Engineer', 'Business', 'Management', 'Research & Development'];
 
 /** @param {import("../.").NS} ns */
 async function upgrade(ns, cost) {
-    while(ns.corporation.getCorporation().funds < cost) {
+    while (ns.corporation.getCorporation().funds < cost) {
         await ns.sleep(delay);
     }
     ns.tprint(`Upgrading ${wilson} to level ${ns.corporation.getUpgradeLevel(wilson) + 1}.`);
@@ -17,7 +17,7 @@ async function upgrade(ns, cost) {
 
 /** @param {import("../.").NS} ns */
 async function advert(ns, cost) {
-    while(ns.corporation.getCorporation().funds < cost) {
+    while (ns.corporation.getCorporation().funds < cost) {
         await ns.sleep(delay);
     }
     ns.tprint(`Hire AdVert in division ${division} to No. ${ns.corporation.getHireAdVertCount(division) + 1}.`);
@@ -27,7 +27,7 @@ async function advert(ns, cost) {
 /** @param {import("../.").NS} ns */
 async function upgradeOffice(ns, cost) {
     for (const city of cities) {
-        while(ns.corporation.getCorporation().funds < ns.corporation.getOfficeSizeUpgradeCost(division, city, upgrade_size)) {
+        while (ns.corporation.getCorporation().funds < ns.corporation.getOfficeSizeUpgradeCost(division, city, upgrade_size)) {
             await ns.sleep(delay);
         }
         ns.tprint(`Upgrade office size in ${city} of division ${division}.`)
@@ -44,9 +44,8 @@ async function upgradeOffice(ns, cost) {
 
 /** @param {import("../.").NS} ns */
 export async function main(ns) {
-    while(true) {
-        var tasks = [
-            {
+    while (true) {
+        var tasks = [{
                 func: upgrade,
                 cost_func: ns.corporation.getUpgradeLevelCost,
                 cost_func_args: [wilson],

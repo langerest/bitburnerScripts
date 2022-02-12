@@ -1,24 +1,25 @@
-import { list_servers } from '/scripts/opened-servers.js'
+import {
+	list_servers
+} from '/scripts/opened-servers.js'
 
 /** @param {import("../.").NS} ns */
 async function scan(ns, parent, server, list) {
-    const children = ns.scan(server);
+	const children = ns.scan(server);
 	if (list.includes(server)) {
 		try {
 			await ns.installBackdoor();
 			ns.tprint(`Installed backdoor on '${server}'.`);
-		}
-		catch (error) {
+		} catch (error) {
 			ns.print(error);
 		}
 	}
-    for (const child of children) {
-        if (parent == child) {
-            continue;
-        }
+	for (const child of children) {
+		if (parent == child) {
+			continue;
+		}
 		ns.connect(child);
-        await scan(ns, server, child, list);
-    }
+		await scan(ns, server, child, list);
+	}
 	if (parent) {
 		ns.connect(parent);
 	}
@@ -35,13 +36,12 @@ export async function main(ns) {
 		if (i_servers.length) {
 			await scan(ns, '', 'home', i_servers);
 			await ns.sleep(60000);
-		}
-		else {
+		} else {
 			await scan(ns, '', 'home', servers);
 			if (servers.length) {
 				await ns.sleep(60000);
-			}	
+			}
 		}
-	}	
+	}
 	while (servers.length)
 }

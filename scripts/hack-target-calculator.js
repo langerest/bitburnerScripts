@@ -1,4 +1,6 @@
-import { list_servers } from '/scripts/opened-servers.js'
+import {
+	list_servers
+} from '/scripts/opened-servers.js'
 
 /** @param {NS} ns **/
 export function getHackRates(ns, ram, server, player) {
@@ -51,16 +53,14 @@ export function getHackRates(ns, ram, server, player) {
 		if (growPercent < 1.0 / (1.0 - actualPercentageToSteal)) {
 			if (percentageToSteal > 1) {
 				percentageToSteal--;
-			}
-			else {
+			} else {
 				return {
 					percentage: 0,
 					time: 0,
 					rate: 0
 				};
 			}
-		}
-		else {
+		} else {
 			perfection = true;
 		}
 	}
@@ -85,15 +85,17 @@ export function getHackTarget(ns, ram) {
 	var results = []
 	for (const server of servers) {
 		var result = getHackRates(ns, ram, server, player);
-		if (result['rate'] > 0 ){
+		if (result['rate'] > 0) {
 			result['server'] = server.hostname;
 			results.push(result);
 		}
 	}
 
-	results.sort((a, b) => {return b['rate'] - a['rate'];});
+	results.sort((a, b) => {
+		return b['rate'] - a['rate'];
+	});
 	return results;
-} 
+}
 
 /** @param {NS} ns **/
 export async function main(ns) {

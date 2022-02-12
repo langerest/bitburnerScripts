@@ -8,7 +8,7 @@ export async function deploy(ns, host, script, script_args, reserved_mem = 0) {
 		return 0;
 	}
 
-	const threads = Math.floor((ns.getServerMaxRam(host) - ns.getServerUsedRam(host) - reserved_mem) / ns.getScriptRam(script));
+	const threads = Math.floor((ns.getServerMaxRam(host) - Math.max(ns.getServerUsedRam(host), reserved_mem)) / ns.getScriptRam(script));
 	if (threads <= 0) {
 		ns.print(`Not enough memory on server '${host}'. Aborting.`);
 		return 0;
@@ -21,7 +21,9 @@ export async function deploy(ns, host, script, script_args, reserved_mem = 0) {
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	const args = ns.flags([["help", false]]);
+	const args = ns.flags([
+		["help", false]
+	]);
 	if (args.help || args._.length < 2) {
 		ns.tprint("This script deploys another script on a server with maximum threads possible.");
 		ns.tprint(`Usage: run ${ns.getScriptName()} HOST SCRIPT ARGUMENTS`);

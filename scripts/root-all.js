@@ -1,10 +1,14 @@
-import { list_servers } from '/scripts/opened-servers.js'
-import { root } from '/scripts/root.js'
+import {
+	list_servers
+} from '/scripts/opened-servers.js'
+import {
+	root
+} from '/scripts/root.js'
 
 /** @param {import("../.").NS} ns */
 export async function main(ns) {
 	var servers = list_servers(ns);
-	while (servers.length){
+	while (servers.length) {
 		servers = servers.filter(server => !ns.hasRootAccess(server));
 		//ns.tprint(servers);
 		for (const server of servers) {
