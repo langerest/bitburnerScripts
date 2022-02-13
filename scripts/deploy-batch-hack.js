@@ -35,7 +35,7 @@ export async function main(ns) {
 	var serverNames = list_servers(ns);
 	serverNames.push('home');
 	var servers = serverNames.map(ns.getServer);
-	servers = servers.filter(server => server.hasAdminRights && (server.maxRam >= min_ram ||
+	servers = servers.filter(server => !server.hostname.startsWith('hacknet-node-') && server.hasAdminRights && (server.maxRam >= min_ram ||
 		(server.hostname == 'home' && server.maxRam >= min_ram + home_reserved_ram)));
 
 	if (args['no_kill']) {

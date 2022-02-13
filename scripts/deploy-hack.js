@@ -43,7 +43,7 @@ export async function main(ns) {
         }
 
         var servers = list_servers(ns);
-        servers = servers.filter(s => s != 'home' && ns.hasRootAccess(s) && (max_ram <= 0 || ns.getServerMaxRam(s) < max_ram));
+        servers = servers.filter(s => s != 'home' && !s.startsWith('hacknet-node-') && ns.hasRootAccess(s) && (max_ram <= 0 || ns.getServerMaxRam(s) < max_ram));
 
         for (const server of servers) {
             if (!ns.isRunning(script, server, target)) {
