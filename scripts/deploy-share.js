@@ -23,7 +23,7 @@ export async function main(ns) {
         var num_port_program = ns.fileExists('BruteSSH.exe') + ns.fileExists('FTPCrack.exe') + ns.fileExists('relaySMTP.exe') + ns.fileExists('HTTPWorm.exe') + ns.fileExists('SQLInject.exe');
 
         for (const server of servers) {
-            if (server == 'home' || (max_ram > 0 && ns.getServerMaxRam(server) >= max_ram)) {
+            if (server == 'home' || server.startsWith('hacknet-node-') || (max_ram > 0 && ns.getServerMaxRam(server) >= max_ram)) {
                 continue;
             }
             if (!ns.hasRootAccess(server)) {

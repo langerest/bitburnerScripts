@@ -1,17 +1,30 @@
 /** @param {import("../.").NS} ns */
 export async function main(ns) {
-    // const upgName = 'Sell for Money';
-    // const upgName = 'Improve Gym Training';
-    // var upgNames = ['Exchange for Bladeburner Rank', 'Exchange for Bladeburner SP', 'Sell for Money'];
-    var upgNames = ['Sell for Money'];
+    const upgfallback = 'Sell for Money';
+    const upgName = 'Improve Gym Training';
+    var upgrades = [{
+            name: 'Exchange for Bladeburner Rank',
+            weight: 1
+        },
+        {
+            name: 'Exchange for Bladeburner SP',
+            weight: 0.6
+        }
+    ];
+    // var upgrades = [];
     const upgTarget = '';
     while (true) {
-        var avail_upg = upgNames.filter((u) => ns.hacknet.hashCost(u) <= ns.hacknet.hashCapacity());
+        var avail_upg = upgrades.filter((u) => ns.hacknet.hashCost(u.name) <= ns.hacknet.hashCapacity());
+        var upg;
         if (avail_upg.length == 0) {
-            return;
+            upg = upgfallback;
         }
-        while (ns.hacknet.numHashes() > ns.hacknet.hashCost(avail_upg[0])) {
-            ns.hacknet.spendHashes(avail_upg[0], upgTarget);
+        else {
+            avail_upg.sort((a, b) => ns.hacknet.hashCost(a.name) / a.weight - ns.hacknet.hashCost(b.name) / b.weight);
+            upg = avail_upg[0].name
+        }
+        while (ns.hacknet.numHashes() > ns.hacknet.hashCost(upg)) {
+            ns.hacknet.spendHashes(upg, upgTarget);
         }
         await ns.sleep(1000);
     }

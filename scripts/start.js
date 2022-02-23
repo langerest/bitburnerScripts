@@ -9,9 +9,12 @@ export async function main(ns) {
 	const program_manager = 'scripts/program-manager.js';
 	const backdoor_manager = 'scripts/backdoor.js';
 	const player_manager = 'scripts/player-manager.js';
-	const home_reserved_ram = 1200;
-	const ram1 = 1024;
-	const ram2 = 8192;
+	const hacknet_manager = 'scripts/hacknet-upgrader.js';
+	const hash_spender = 'scripts/hash-spender.js';
+	const gang_manager = 'scripts/gang-manager.js';
+	const home_reserved_ram = 128;
+	const ram1 = 64;
+	const ram2 = 256;
 	const min_batch_ram = 64;
 	const faction_to_work = 'Daedalus';
 
@@ -24,6 +27,9 @@ export async function main(ns) {
 	ns.run(program_manager, 1, '-c');
 	ns.run(backdoor_manager, 1);
 	ns.run(player_manager, 1, faction_to_work);
+	ns.run(hacknet_manager);
+	ns.run(hash_spender);
+	// ns.run(gang_manager);
 	ns.tprint(`Purchasing servers ${ram1} GB.`);
 	var purchase_pid = ns.run(purchase_server, 1, ram1);
 
@@ -33,7 +39,7 @@ export async function main(ns) {
 		await ns.sleep(60000);
 	}
 	ns.tprint(`Deploying batch hacking script`);
-	var batch_max_time = 30000;
+	var batch_max_time = 90000;
 	ns.scriptKill(deploy, 'home');
 	ns.run(deploy, 1, '--target', target, '--max_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--home_reserved_ram', home_reserved_ram);
 	var batch_pid = ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram, '--no_kill');
@@ -45,7 +51,7 @@ export async function main(ns) {
 	}
 
 	ns.tprint(`Deploying batch hacking script`);
-	batch_max_time = 30000;
+	batch_max_time = 180000;
 	ns.scriptKill(batch, 'home');
 	ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
 
@@ -62,7 +68,7 @@ export async function main(ns) {
 	}
 
 	ns.tprint(`Deploying batch hacking script`);
-	batch_max_time = 30000;
+	batch_max_time = 600000;
 	ns.scriptKill(batch, 'home');
 	ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
 	ns.scriptKill(deploy, 'home');

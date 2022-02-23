@@ -25,16 +25,16 @@ export async function main(ns) {
         for (const faction of faction_invites) {
             ns.joinFaction(faction);
         }
-        var player = ns.getPlayer();
-        if (player.factions.includes(faction_to_work)) {
-            if (player.workType != 'Working for Faction' || player.currentWorkFactionName != faction_to_work) {
-                ns.workForFaction(faction_to_work, work_type, focus);
-            }
-        } else if (ns.getPlayer().city == university_city) {
-            if (player.className != class_name) {
-                ns.universityCourse(university, course_name, focus);
-            }
-        }
+        // var player = ns.getPlayer();
+        // if (player.factions.includes(faction_to_work)) {
+        //     if (player.workType != 'Working for Faction' || player.currentWorkFactionName != faction_to_work) {
+        //         ns.workForFaction(faction_to_work, work_type, focus);
+        //     }
+        // } else if (ns.getPlayer().city == university_city) {
+        //     if (player.className != class_name) {
+        //         ns.universityCourse(university, course_name, focus);
+        //     }
+        // }
         await ns.sleep(delay)
     }
 }
