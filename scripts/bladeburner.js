@@ -52,8 +52,63 @@ export async function main(ns) {
         }
     ];
     const contract_operations = contracts.concat(operations);
+    const skills = [{
+            name: 'Blade\'s Intuition',
+            max_level: Infinity
+        },
+        {
+            name: 'Reaper',
+            max_level: Infinity
+        },
+        {
+            name: 'Evasive System',
+            max_level: Infinity
+        },
+        {
+            name: 'Digital Observer',
+            max_level: Infinity
+        },
+        {
+            name: 'Cloak',
+            max_level: 25
+        },
+        {
+            name: 'Short-Circuit',
+            max_level: 25
+        },
+        {
+            name: 'Tracer',
+            max_level: 10
+        },
+        {
+            name: 'Overclock',
+            max_level: 90
+        },
+        {
+            name: 'Cyber\'s Edge',
+            max_level: 10
+        },
+        {
+            name: 'Hands of Midas',
+            max_level: 10
+        },
+        {
+            name: 'Hyperdrive',
+            max_level: 10
+        },
+    ]
     var rest = false;
     while (true) {
+        while (true) {
+            const skill = skills.filter((s) => ns.bladeburner.getSkillLevel(s.name) < s.max_level).sort((a, b) =>
+            ns.bladeburner.getSkillUpgradeCost(a.name) - ns.bladeburner.getSkillUpgradeCost(b.name))[0];
+            if (ns.bladeburner.getSkillPoints() >= ns.bladeburner.getSkillUpgradeCost(skill.name)) {
+                ns.bladeburner.upgradeSkill(skill.name);
+            }
+            else {
+                break;
+            }
+        }
         const [current_stamina, max_stamina] = ns.bladeburner.getStamina();
         const stamina_percentage = current_stamina / max_stamina;
         if (stamina_percentage < 0.55) {
@@ -111,7 +166,7 @@ export async function main(ns) {
             }
         }
         action_time = ns.bladeburner.getActionTime(action.type, action.name);
-        while(!ns.bladeburner.startAction(action.type, action.name)) {
+        while (!ns.bladeburner.startAction(action.type, action.name)) {
             await ns.sleep(100);
         }
         const bonus_time = ns.bladeburner.getBonusTime();
