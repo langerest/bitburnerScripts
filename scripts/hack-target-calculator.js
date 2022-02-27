@@ -7,7 +7,8 @@ export function getHackRates(ns, ram, server, player) {
 	server.hackDifficulty = server.minDifficulty;
 	server.moneyAvailable = server.moneyMax;
 
-	const server_weaken_rate = ns.getBitNodeMultipliers().ServerWeakenRate;
+	const bitnode_multiplier = '/data/bitnode_multiplier.txt';
+	const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
 	//constant, potency of weaken threads
 	const threadPotencyForWeaken = 0.05 * server_weaken_rate;
 	// two weaken threads per 10 hack threads

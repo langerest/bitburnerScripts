@@ -25,7 +25,8 @@ export async function main(ns) {
 	const home_reserved_ram = args['home_reserved_ram']
 
 	const script_manager = "/scripts/batch-hack-manager.js";
-	const server_weaken_rate = ns.getBitNodeMultipliers().ServerWeakenRate;
+	const bitnode_multiplier = '/data/bitnode_multiplier.txt';
+	const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
 
 	const hack_script = '/scripts/batch-hack/hack.js';
 	const weaken_script = '/scripts/batch-hack/weaken.js';
