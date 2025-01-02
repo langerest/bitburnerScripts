@@ -9,7 +9,7 @@ export function autocomplete(data, args) {
 	return data.servers;
 }
 
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 	const args = ns.flags(argSchema);
 	const target = args['target'];

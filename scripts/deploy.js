@@ -1,3 +1,4 @@
+/** @param {import("../.").NS} ns */
 export async function deploy(ns, host, script, script_args, reserved_mem = 0) {
 	if (!ns.serverExists(host)) {
 		ns.tprint(`Server '${host}' does not exist. Aborting.`);
@@ -14,12 +15,12 @@ export async function deploy(ns, host, script, script_args, reserved_mem = 0) {
 		return 0;
 	}
 	ns.tprint(`Launching script '${script}' on server '${host}' with ${threads} threads and the following arguments: ${script_args}`);
-	await ns.scp(script, ns.getHostname(), host);
+	await ns.scp(script, host, ns.getHostname());
 	ns.exec(script, host, threads, ...script_args);
 	return threads;
 }
 
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 	const args = ns.flags([
 		["help", false]

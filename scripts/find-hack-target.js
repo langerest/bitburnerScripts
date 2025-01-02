@@ -5,7 +5,7 @@ import {
     analyze_server
 } from '/scripts/analyze-server.js'
 
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
     var servers = list_servers(ns);
     for (const server of servers) {

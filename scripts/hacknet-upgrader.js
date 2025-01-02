@@ -1,7 +1,7 @@
-/** @param {import("..").NS} ns */
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 
-    const target_time = 3 * 3600;
+    const target_time = 5 * 3600;
     const min_gain_cost_ratio = 1.0 / target_time / 2.5e5;
     const bitnode_mult = ns.getBitNodeMultipliers().HacknetNodeMoney;
 

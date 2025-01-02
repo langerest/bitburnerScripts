@@ -2,6 +2,7 @@ import {
     list_servers
 } from '/scripts/opened-servers.js'
 
+/** @param {import("../.").NS} ns */
 export function analyze_server(ns, server) {
     const ram = ns.getServerRam(server);
     const money = ns.getServerMoneyAvailable(server);
@@ -28,6 +29,7 @@ ${server}:
 `);
 }
 
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
     const args = ns.flags([
         ["help", false]

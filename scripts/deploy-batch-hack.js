@@ -17,7 +17,7 @@ export function autocomplete(data, args) {
 	return [];
 }
 
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 	const args = ns.flags(argSchema);
 	const min_ram = args['min_ram'];
@@ -26,12 +26,15 @@ export async function main(ns) {
 
 	const script_manager = "/scripts/batch-hack-manager.js";
 	const bitnode_multiplier = '/data/bitnode_multiplier.txt';
-	const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
+	// const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
+	const server_weaken_rate = 1.0;
 
 	const hack_script = '/scripts/batch-hack/hack.js';
 	const weaken_script = '/scripts/batch-hack/weaken.js';
 	const grow_script = '/scripts/batch-hack/grow.js';
 	const basic_hack = '/scripts/basic-hack.js';
+
+	const scripts = [script_manager, hack_script, grow_script, weaken_script]
 
 	var serverNames = list_servers(ns);
 	serverNames.push('home');
@@ -99,9 +102,7 @@ export async function main(ns) {
 				} else {
 					if (!ns.isRunning(script_manager, server.hostname, '--target', target, '--server_weaken_rate', server_weaken_rate)) {
 						ns.killall(server.hostname);
-						for (const script of [script_manager, hack_script, grow_script, weaken_script]) {
-							await ns.scp(script, server.hostname);
-						}
+						await ns.scp(scripts, server.hostname);
 						ns.tprint(`Launching script '${script_manager}' on server '${server.hostname}' targeting '${target}'.`);
 						ns.exec(script_manager, server.hostname, 1, '--target', target, '--server_weaken_rate', server_weaken_rate);
 					}

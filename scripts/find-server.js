@@ -1,3 +1,4 @@
+/** @param {import("..").NS} ns */
 export function recursiveScan(ns, parent, server, target, route) {
     const children = ns.scan(server);
     for (let child of children) {
@@ -18,6 +19,7 @@ export function recursiveScan(ns, parent, server, target, route) {
     return false;
 }
 
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
     const args = ns.flags([
         ["help", false]

@@ -130,10 +130,18 @@ export async function main(ns) {
         var action_time;
         var avaliable_actions = contract_operations.filter((o) => ns.bladeburner.getActionCountRemaining(o.type, o.name) > 0);
         if (avaliable_actions.length == 0) {
-            action = {
-                type: 'General',
-                name: 'Field Analysis'
-            };
+            if (ns.bladeburner.getRank() < 400000) {
+                action = {
+                    type: 'General',
+                    name: 'Field Analysis'
+                };
+            }
+            else{
+                action = {
+                    type: 'General',
+                    name: 'Training'
+                };
+            }
         } else {
             var safe_contract_operations = avaliable_actions.filter((o) => ns.bladeburner.getActionEstimatedSuccessChance(o.type, o.name)[1] == 1);
             var blackop_name = ns.bladeburner.getBlackOpNames().find((o) => ns.bladeburner.getActionCountRemaining('BlackOps', o) > 0);

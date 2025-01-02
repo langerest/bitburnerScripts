@@ -1,4 +1,4 @@
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns **/
 export async function main(ns) {
 	const file = '/data/bitnode_multiplier.txt';
 	var multipiers = ns.getBitNodeMultipliers();

@@ -1,4 +1,4 @@
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns **/
 export function root(ns, target) {
 	if (ns.hasRootAccess(target)) {
 		return true;
@@ -27,6 +27,7 @@ export function root(ns, target) {
 	}
 }
 
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
 	const args = ns.flags([
 		["help", false]

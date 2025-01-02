@@ -13,7 +13,7 @@ export async function main(ns) {
 	const hacknet_manager = 'scripts/hacknet-upgrader.js';
 	const hash_spender = 'scripts/hash-spender.js';
 	const gang_manager = 'scripts/gang-manager.js';
-	const home_reserved_ram = 1200;
+	const home_reserved_ram = 32;
 	const ram1 = 64;
 	const ram2 = 256;
 	const min_batch_ram = 64;
@@ -29,55 +29,55 @@ export async function main(ns) {
 	var target = 'n00dles';
 	ns.tprint(`Deploying hacking script targeting '${target}'.`);
 	ns.run(deploy, 1, '--target', target, '--home_reserved_ram', home_reserved_ram);
-	ns.run(tor_manager, 1, '-c');
-	ns.run(program_manager, 1, '-c');
-	ns.run(backdoor_manager, 1);
-	ns.run(player_manager, 1, faction_to_work);
-	ns.run(hacknet_manager);
-	ns.run(hash_spender);
+	// ns.run(tor_manager, 1, '-c');
+	// ns.run(program_manager, 1, '-c');
+	// ns.run(backdoor_manager, 1);
+	// ns.run(player_manager, 1, faction_to_work);
+	// ns.run(hacknet_manager);
+	// ns.run(hash_spender);
 	// ns.run(gang_manager);
-	// ns.tprint(`Purchasing servers ${ram1} GB.`);
-	// var purchase_pid = ns.run(purchase_server, 1, ram1);
+	ns.tprint(`Purchasing servers ${ram1} GB.`);
+	var purchase_pid = ns.run(purchase_server, 1, ram1);
 
 	while (ns.getHackingLevel() < 10) {
 		await ns.sleep(60000);
 	}
 	ns.tprint(`Deploying batch hacking script`);
-	var batch_max_time = 600000;
+	var batch_max_time = 60000;
 	ns.scriptKill(deploy, 'home');
 	ns.run(deploy, 1, '--target', target, '--max_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--home_reserved_ram', home_reserved_ram);
 	var batch_pid = ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram, '--no_kill');
-	// while (ns.isRunning(purchase_pid)) {
-	while (true) {
+	while (ns.isRunning(purchase_pid)) {
+	// while (true) {
 		if (!ns.isRunning(batch_pid)) {
 			batch_pid = ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram, '--no_kill');
 		}
 		await ns.sleep(10000);
 	}
 
-	// ns.tprint(`Deploying batch hacking script`);
-	// batch_max_time = 180000;
-	// ns.scriptKill(batch, 'home');
-	// ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
+	ns.tprint(`Deploying batch hacking script`);
+	batch_max_time = 180000;
+	ns.scriptKill(batch, 'home');
+	ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
 
-	// var extra_money_to_save = 0;
-	//var extra_money_to_save = 1.0e11; 
-	// while (ns.getServerMoneyAvailable('home') < ns.getPurchasedServerCost(ram2) * 25 + extra_money_to_save) {
-	// 	await ns.sleep(60000);
-	// }
+	var extra_money_to_save = 0;
+	var extra_money_to_save = 1.0e11; 
+	while (ns.getServerMoneyAvailable('home') < ns.getPurchasedServerCost(ram2) * 25 + extra_money_to_save) {
+		await ns.sleep(60000);
+	}
 
-	// ns.tprint(`Purchasing servers ${ram2} GB.`);
-	// purchase_pid = ns.run(purchase_server, 1, ram2);
-	// while (ns.isRunning(purchase_pid)) {
-	// 	await ns.sleep(5000);
-	// }
+	ns.tprint(`Purchasing servers ${ram2} GB.`);
+	purchase_pid = ns.run(purchase_server, 1, ram2);
+	while (ns.isRunning(purchase_pid)) {
+		await ns.sleep(5000);
+	}
 
-	// ns.tprint(`Deploying batch hacking script`);
-	// batch_max_time = 600000;
-	// ns.scriptKill(batch, 'home');
-	// ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
-	// ns.scriptKill(deploy, 'home');
-	// ns.run(deploy_share, 1, ram1 >= min_batch_ram ? ram1 : min_batch_ram);
+	ns.tprint(`Deploying batch hacking script`);
+	batch_max_time = 600000;
+	ns.scriptKill(batch, 'home');
+	ns.run(batch, 1, '--min_ram', ram1 >= min_batch_ram ? ram1 : min_batch_ram, '--max_time', batch_max_time, '--home_reserved_ram', home_reserved_ram);
+	ns.scriptKill(deploy, 'home');
+	ns.run(deploy_share, 1, ram1 >= min_batch_ram ? ram1 : min_batch_ram);
 
 	// //batch_target = 'joesguns';
 	// //batch_target = 'harakiri-sushi';

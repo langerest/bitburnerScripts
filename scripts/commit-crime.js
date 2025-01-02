@@ -2,12 +2,12 @@
 export async function main(ns) {
     var crimes = ['Shoplift', 'Rob store', 'Mug someone', 'Larceny', 'Deal Drugs', 'Bond Forgery', 'Traffick illegal Arms',
     'Homicide', 'Grand theft Auto', 'Kidnap and Ransom', 'Assassinate', 'Heist'];
-    // const priority = 'strength_exp';
+    const priority = 'strength_exp';
     // const priority = 'defense_exp';
-    const priority = 'money';
+    // const priority = 'money';
     const safe_delay = 20;
     // const crime = 'Mug someone';
-    // const crime = 'Homicide';
+    // var crimes = ['Homicide'];
     while (true) {
         crimes.sort((a, b) => {
             var a_exp = ns.getCrimeStats(a)[priority];

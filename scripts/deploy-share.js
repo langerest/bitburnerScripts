@@ -8,7 +8,7 @@ import {
     root
 } from '/scripts/root.js'
 
-/** @param {NS} ns **/
+/** @param {import("../.").NS} ns */
 export async function main(ns) {
     const script = "/scripts/share.js";
     const home_reserved_mem = 50;
