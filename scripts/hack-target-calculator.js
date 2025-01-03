@@ -1,5 +1,5 @@
 import {
-	list_servers
+	listServers
 } from '/scripts/opened-servers.js'
 
 /** @param {import("../.").NS} ns **/
@@ -7,7 +7,7 @@ export function getHackRates(ns, ram, server, player) {
 	server.hackDifficulty = server.minDifficulty;
 	server.moneyAvailable = server.moneyMax;
 
-	const bitnode_multiplier = '/data/bitnode_multiplier.txt';
+	const bitnode_multiplier = '/data/bitnode-multiplier.txt';
 	//const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
 	const server_weaken_rate = 1.0;
 	//constant, potency of weaken threads
@@ -78,7 +78,7 @@ export function getHackRates(ns, ram, server, player) {
 
 /** @param {import("../.").NS} ns */
 export function getHackTarget(ns, ram) {
-	const serverNames = list_servers(ns);
+	const serverNames = listServers(ns);
 	var servers = serverNames.map(ns.getServer);
 	const player = ns.getPlayer();
 

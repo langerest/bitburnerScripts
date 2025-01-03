@@ -1,5 +1,5 @@
 import {
-	list_servers
+	listServers
 } from '/scripts/opened-servers.js'
 import {
 	getHackTarget
@@ -25,7 +25,7 @@ export async function main(ns) {
 	const home_reserved_ram = args['home_reserved_ram']
 
 	const script_manager = "/scripts/batch-hack-manager.js";
-	const bitnode_multiplier = '/data/bitnode_multiplier.txt';
+	const bitnode_multiplier = '/data/bitnode-multiplier.txt';
 	// const server_weaken_rate = JSON.parse(ns.read(bitnode_multiplier)).ServerWeakenRate;
 	const server_weaken_rate = 1.0;
 
@@ -36,7 +36,7 @@ export async function main(ns) {
 
 	const scripts = [script_manager, hack_script, grow_script, weaken_script]
 
-	var serverNames = list_servers(ns);
+	var serverNames = listServers(ns);
 	serverNames.push('home');
 	var servers = serverNames.map(ns.getServer);
 	servers = servers.filter(server => !server.hostname.startsWith('hacknet-node-') && server.hasAdminRights && (server.maxRam >= min_ram ||

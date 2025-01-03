@@ -2,7 +2,7 @@ import {
     deploy
 } from '/scripts/deploy.js'
 import {
-    list_servers
+    listServers
 } from '/scripts/opened-servers.js'
 import {
     root
@@ -18,7 +18,7 @@ export async function main(ns) {
     }
 
     while (true) {
-        var servers = list_servers(ns);
+        var servers = listServers(ns);
         var opened_servers = [];
         var num_port_program = ns.fileExists('BruteSSH.exe') + ns.fileExists('FTPCrack.exe') + ns.fileExists('relaySMTP.exe') + ns.fileExists('HTTPWorm.exe') + ns.fileExists('SQLInject.exe');
 

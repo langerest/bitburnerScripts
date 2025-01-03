@@ -2,7 +2,7 @@
 export async function main(ns) {
     const upgfallback = 'Sell for Money';
     const upgName = 'Improve Gym Training';
-    const bitnode_multiplier = '/data/bitnode_multiplier.txt';
+    const bitnode_multiplier = '/data/bitnode-multiplier.txt';
     var upgrades = [
         // {
         //     name: 'Exchange for Bladeburner Rank',

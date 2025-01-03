@@ -1,5 +1,5 @@
 import {
-	list_servers
+	listServers
 } from '/scripts/opened-servers.js'
 
 /** @param {import("../.").NS} ns */
@@ -30,7 +30,7 @@ export async function main(ns) {
 	var servers;
 	const important_servers = ['CSEC', 'avmnite-02h', 'I.I.I.I', 'run4theh111z', 'w0r1d_d43m0n'];
 	do {
-		servers = list_servers(ns);
+		servers = listServers(ns);
 		servers = servers.filter(server => server != 'home' && !ns.getServer(server).backdoorInstalled && !ns.getServer(server).purchasedByPlayer);
 		var i_servers = servers.filter(server => important_servers.includes(server));
 		if (i_servers.length) {

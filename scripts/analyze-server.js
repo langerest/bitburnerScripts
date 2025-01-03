@@ -1,10 +1,14 @@
-import {
-    list_servers
-} from '/scripts/opened-servers.js'
+import 
+{
+    listServers
+} 
+from '/scripts/opened-servers.js'
 
 /** @param {import("../.").NS} ns */
-export function analyze_server(ns, server) {
-    const ram = ns.getServerRam(server);
+export function analyzeServer(ns, server) 
+{
+    const usedRam = ns.getServerUsedRam(server)
+    const maxRam = ns.getServerMaxRam(server);
     const money = ns.getServerMoneyAvailable(server);
     const maxMoney = ns.getServerMaxMoney(server);
     const minSec = ns.getServerMinSecurityLevel(server);
@@ -12,8 +16,8 @@ export function analyze_server(ns, server) {
     ns.tprint(`
 
 ${server}:
-    RAM        : ${ram[1]} / ${ram[0]} (${ram[1] / ram[0] * 100}%)
-    $          : ${ns.nFormat(money, "$0.000a")} / ${ns.nFormat(maxMoney, "$0.000a")} (${(money / maxMoney * 100).toFixed(2)}%)
+    RAM        : ${usedRam} GB / ${maxRam} GB (${(usedRam / maxRam * 100).toFixed(2)}%)
+    $          : ${ns.formatNumber(money)} / ${ns.formatNumber(maxMoney)} (${(money / maxMoney * 100).toFixed(2)}%)
     security   : ${minSec.toFixed(2)} / ${sec.toFixed(2)}
     growth     : ${ns.getServerGrowth(server)}
     hack time  : ${ns.tFormat(ns.getHackTime(server))}
@@ -26,16 +30,24 @@ ${server}:
     hack 25%   : ${(.25 / ns.hackAnalyze(server)).toFixed(2)} threads
     hack 50%   : ${(.50 / ns.hackAnalyze(server)).toFixed(2)} threads
     hackChance : ${(ns.hackAnalyzeChance(server) * 100).toFixed(2)}%
-`);
+`
+    );
+
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns) {
-    const args = ns.flags([
-        ["help", false]
-    ]);
+export async function main(ns) 
+{
+    const args = ns.flags
+    (
+        [
+            ["help", false]
+        ]
+    );
+
     const server = ns.args[0];
-    if (args.help) {
+    if (args.help) 
+    {
         ns.tprint("This script does a more detailed analysis of a server.");
         ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
         ns.tprint("Example:");
@@ -43,19 +55,23 @@ export async function main(ns) {
         return;
     }
 
-    if (server) {
-        analyze_server(ns, server);
-    } else {
-        var servers = list_servers(ns);
+    if (server) 
+    {
+        analyzeServer(ns, server);
+    } 
+    else 
+    {
+        var servers = listServers(ns);
         for (const server of servers) {
             if (ns.getPurchasedServers().includes(server)) {
                 continue;
             }
-            analyze_server(ns, server);
+            analyzeServer(ns, server);
         }
     }
 }
 
-export function autocomplete(data, args) {
+export function autocomplete(data, args) 
+{
     return data.servers;
 }
