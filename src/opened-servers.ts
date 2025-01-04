@@ -17,13 +17,21 @@ function scan(ns: NS, parent: string, server: string, list: string[])
 }
 
 /** @param {import("../.").NS} ns 
- * Lists all on which you can run scripts.
+ * Lists all server names.
 */
 export function listServers(ns: NS)
 {
     const list: string[] = [];
     scan(ns, '', 'home', list);
     return list;
+}
+
+/** @param {import("../.").NS} ns 
+ * Lists the names of all servers on which you can run scripts.
+*/
+export function openedServers(ns: NS)
+{
+    return listServers(ns).filter(server => ns.hasRootAccess(server));
 }
 
 /** @param {import("../.").NS} ns */
@@ -38,14 +46,14 @@ export function main(ns: NS)
 
     if (args.help) 
     {
-        ns.tprint("This script lists all servers on which you can run scripts.");
+        ns.tprint("This script lists the names of all servers on which you can run scripts.");
         ns.tprint(`Usage: run ${ns.getScriptName()}`);
         ns.tprint("Example:");
         ns.tprint(`> run ${ns.getScriptName()}`);
         return;
     }
 
-    const servers = listServers(ns).filter(s => ns.hasRootAccess(s)).concat(['home']);
+    const servers = openedServers(ns);
     for (const server of servers) 
     {
         const used = ns.getServerUsedRam(server);

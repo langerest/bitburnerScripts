@@ -1,5 +1,6 @@
+import { NS, ScriptArg, AutocompleteData, Server } from "..";
 import { listServers } from './opened-servers.js'
-import { getHackTarget } from './hack-target-calculator.js'
+import { BatchHackResult, getHackTarget } from './hack-target-calculator.js'
 
 const argSchema = 
 [
@@ -7,21 +8,21 @@ const argSchema =
     ['maxTime', 300000],
     ['homeReservedRam', 32],
     ['noKill', false],
-];
+] as [string, ScriptArg | string[]][];
 
-export function autocomplete(data, args) 
+export function autocomplete(data: AutocompleteData, args: ScriptArg) 
 {
     data.flags(argSchema);
     return [];
 }
 
 /** @param {import("..").NS} ns */
-export async function main(ns) 
+export async function main(ns: NS) 
 {
     const args = ns.flags(argSchema);
-    const minRam = args['minRam'];
-    const maxTime = args['maxTime'];
-    const homeReservedRam = args['homeReservedRam']
+    const minRam = args['minRam'] as number;
+    const maxTime = args['maxTime'] as number;
+    const homeReservedRam = args['homeReservedRam'] as number;
 
     const batchHackManagerScript = "batch-hack-manager.js";
     const bitnodeMultiplier = 'data/bitnode-multiplier.txt';
@@ -58,11 +59,11 @@ export async function main(ns)
         servers = servers.filter(server => !ns.scriptRunning(batchHackManagerScript, server.hostname));
     }
 
-    servers.sort((a, b) => b.hostname == 'home' ? b.maxRam - homeReservedRam : b.maxRam - a.hostname == 'home' ? a.maxRam - homeReservedRam : a.maxRam);
+    servers.sort((a, b) => (b.hostname == 'home' ? b.maxRam - homeReservedRam : b.maxRam) - (a.hostname == 'home' ? a.maxRam - homeReservedRam : a.maxRam));
     //ns.tprint(servers.map((a) => a.hostname));
 
-    var targetsHostsMap = {};
-    var targetsthreadsMap = {};
+    var targetsHostsMap: { [key: string]: Server[]; } = {};
+    var targetsthreadsMap: { [key: string]: BatchHackResult[]; } = {};
     for (const host of servers) 
     {
         var ram = host.hostname == 'home' ? host.maxRam - homeReservedRam : host.maxRam;
@@ -77,32 +78,28 @@ export async function main(ns)
             var targetResults = getHackTarget(ns, threads, serverWeakenRate);
             ns.tprint(targetResults);
 
-            targetResults = targetResults.filter(result => (result['time'] <= maxTime));
-            targetResults = targetResults.filter(result => (result['rate'] >= targetResults[0]['rate'] * 0.5));
+            targetResults = targetResults.filter(result => (result.time !== undefined && result.time <= maxTime));
+            targetResults = targetResults.filter(result => (result.rate >= targetResults[0].rate * 0.5));
             targetsthreadsMap[threads.toString()] = targetResults;
             for (const result of targetResults) 
             {
-                if (!(result['server'] in targetsHostsMap)) 
+                if (!(result.server in targetsHostsMap)) 
                 {
-                    targetsHostsMap[result['server']] = [];
+                    targetsHostsMap[result.server] = [];
                 }
             }
         }
 
-        targetsthreadsMap[threads.toString()].sort((a, b) => {
-            if (targetsHostsMap[a['server']].length == targetsHostsMap[b['server']].length) 
-            {
-                return b['rate'] - a['rate'];
-            }
-
-            return targetsHostsMap[a['server']].length - targetsHostsMap[b['server']].length;
-        })
+        targetsthreadsMap[threads.toString()].sort((a, b) => (
+            targetsHostsMap[a.server].length === targetsHostsMap[b.server].length ? 
+            b.rate - a.rate : 
+            targetsHostsMap[a.server].length - targetsHostsMap[b.server].length));
 
         //ns.tprint(targetsRamMap[threads.toString()]);
 
         if (targetsthreadsMap[threads.toString()].length > 0) 
         {
-            targetsHostsMap[targetsthreadsMap[threads.toString()][0]['server']].push(host);
+            targetsHostsMap[targetsthreadsMap[threads.toString()][0].server].push(host);
         }
     }
 
