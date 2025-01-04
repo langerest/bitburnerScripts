@@ -1,5 +1,7 @@
+import { NS } from "..";
+
 /** @param {import("../.").NS} ns **/
-export function root(ns, target) 
+export function root(ns: NS, target: string) 
 {
 	if (ns.hasRootAccess(target)) 
 	{
@@ -34,6 +36,7 @@ export function root(ns, target)
 	try 
 	{
 		ns.nuke(target);
+		ns.print(`Successfully nuked server ${target}.`);
 		return true;
 	} 
 	catch (exception) 
@@ -44,7 +47,7 @@ export function root(ns, target)
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns) 
+export async function main(ns: NS) 
 {
 	const args = ns.flags
 	(
@@ -53,7 +56,7 @@ export async function main(ns)
 		]
 	);
 
-	let server = args._[0];
+	let server = (args._ as string[])[0];
 	if (!server || args.help) 
 	{
 		ns.tprint("This script opens the root access to the server.");

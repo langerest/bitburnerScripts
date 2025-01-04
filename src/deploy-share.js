@@ -1,16 +1,10 @@
-import {
-    deploy
-} from '/scripts/deploy.js'
-import {
-    listServers
-} from '/scripts/opened-servers.js'
-import {
-    root
-} from '/scripts/root.js'
+import { deploy } from './deploy.js'
+import { listServers } from './opened-servers.js'
+import { root } from './root.js'
 
 /** @param {import("../.").NS} ns */
 export async function main(ns) {
-    const script = "/scripts/share.js";
+    const script = "share.js";
     const home_reserved_mem = 50;
     var max_ram = 0;
     if (ns.args.length > 0) {

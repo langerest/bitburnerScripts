@@ -1,12 +1,17 @@
 /** @param {import("../../.").NS} ns */
-export async function main(ns) {
+export async function main(ns) 
+{
 	const target = ns.args[0];
 	var delay;
-	if (ns.args.length > 1) {
+	if (ns.args.length > 1) 
+	{
 		delay = ns.args[1];
-	} else {
+	} 
+	else 
+	{
 		delay = 0;
 	}
+	
 	await ns.sleep(delay);
-	await ns.weaken(target);
+	await ns.grow(target);
 }

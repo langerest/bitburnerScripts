@@ -1,4 +1,4 @@
-/** @param {import("../.").NS} ns */
+/** @param {import("..").NS} ns */
 export async function main(ns) {
     var cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
     const general_actions = [{

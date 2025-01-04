@@ -1,8 +1,4 @@
-import 
-{
-    listServers
-} 
-from '/scripts/opened-servers.js'
+import { listServers } from './opened-servers.js'
 
 /** @param {import("../.").NS} ns */
 export function analyzeServer(ns, server) 

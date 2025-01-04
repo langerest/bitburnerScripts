@@ -1,5 +1,7 @@
+import { NS } from "..";
+
 /** @param {import("../.").NS} ns **/
-function scan(ns, parent, server, list) 
+function scan(ns: NS, parent: string, server: string, list: string[]) 
 {
     const children = ns.scan(server);
     for (let child of children) 
@@ -17,15 +19,15 @@ function scan(ns, parent, server, list)
 /** @param {import("../.").NS} ns 
  * Lists all on which you can run scripts.
 */
-export function listServers(ns) 
+export function listServers(ns: NS)
 {
-    const list = [];
+    const list: string[] = [];
     scan(ns, '', 'home', list);
     return list;
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns) 
+export function main(ns: NS) 
 {
     const args = ns.flags
     (

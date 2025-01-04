@@ -1,24 +1,16 @@
-import 
-{
-    deploy
-} 
-from '/scripts/deploy.js'
-
-import 
-{
-    listServers
-} 
-from '/scripts/opened-servers.js'
+import { NS, ScriptArg, AutocompleteData } from "..";
+import { deploy } from './deploy.js'
+import { listServers } from './opened-servers.js'
 
 /** @param {import("../.").NS} ns */
-export async function deployBasicHack(ns, target, maxRam = 0, homeReservedRam = 32)
+export async function deployBasicHack(ns: NS, target: string, maxRam: number = 0, homeReservedRam: number = 32)
 {
-    const script = "scripts/basic-hack.js";
+    const script = "basic-hack.js";
 
     if (!ns.hasRootAccess(target))
     {
         ns.tprint(`No root access to ${target}.`);
-        return 0;
+        return;
     }
 
     if (!ns.isRunning(script, 'home', target)) 
@@ -35,7 +27,7 @@ export async function deployBasicHack(ns, target, maxRam = 0, homeReservedRam = 
     }
 
     var servers = listServers(ns);
-    servers = servers.filter(s => s != 'home' && !s.startsWith('hacknet-node-') && ns.hasRootAccess(s) && (maxRam <= 0 || ns.getServerMaxRam(s) < maxRam));
+    servers = servers.filter(s => s != 'home' && !s.startsWith('hacknet-node-') && ns.hasRootAccess(s) && (maxRam == 0 || ns.getServerMaxRam(s) < maxRam));
 
     for (const server of servers) 
     {
@@ -52,21 +44,21 @@ const argSchema =
     ['target', 'n00dles'],
     ['maxRam', 0], // The maximum server max ram to run the script. 0 means unlimited.
     ['homeReservedRam', 32], // Ram reserved for home.
-];
+] as [string, ScriptArg | string[]][];
 
-export function autocomplete(data, args) 
+export function autocomplete(data: AutocompleteData, args: ScriptArg[]) 
 {
     data.flags(argSchema);
     return data.servers;
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns) 
+export async function main(ns: NS) 
 {
     const args = ns.flags(argSchema);
-    const target = args['target'];
-    const maxRam = args['maxRam'];
-    const homeReservedRam = args['homeReservedRam'];
+    const target = args['target'] as string;
+    const maxRam = args['maxRam'] as number;
+    const homeReservedRam = args['homeReservedRam'] as number;
 
     while (!ns.hasRootAccess(target)) 
     {

@@ -1,7 +1,9 @@
+import { NS, ScriptArg, AutocompleteData } from "..";
+
 /** @param {import("..").NS} ns */
-export async function main(ns) 
+export async function main(ns: NS) 
 {
-    var target = ns.args[0];
+    var target = ns.args[0] as string;
     var moneyThresh = ns.getServerMaxMoney(target) * 0.75;
     var securityThresh = ns.getServerMinSecurityLevel(target) + 5;
     while (true) 
@@ -21,7 +23,7 @@ export async function main(ns)
     }
 }
 
-export function autocomplete(data, args) 
+export function autocomplete(data: AutocompleteData, args: ScriptArg) 
 {
     return data.servers;
 }

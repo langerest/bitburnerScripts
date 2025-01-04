@@ -1,6 +1,6 @@
 import {
     calc_material
-} from "/scripts/material-calculator";
+} from "./material-calculator";
 
 const cities = ["Aevum", "Chongqing", "Sector-12", "New Tokyo", "Ishima", "Volhaven"];
 

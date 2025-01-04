@@ -1,9 +1,9 @@
 import {
     listServers
-} from '/scripts/opened-servers.js'
+} from './opened-servers.js'
 import {
     analyzeServer
-} from '/scripts/analyze-server.js'
+} from './analyze-server.js'
 
 /** @param {import("../.").NS} ns */
 export async function main(ns) {

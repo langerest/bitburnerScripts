@@ -1,17 +1,9 @@
-import 
-{
-	listServers
-} 
-from '/scripts/opened-servers.js'
-
-import 
-{
-	root
-} 
-from '/scripts/root.js'
+import { NS } from '..';
+import { listServers } from './opened-servers.js'
+import { root } from './root.js'
 
 /** @param {import("../.").NS} ns */
-export async function rootAll(ns)
+export async function rootAll(ns: NS)
 {
 	var servers = listServers(ns).filter(server => !ns.hasRootAccess(server));
 	for (const server of servers) 
@@ -21,7 +13,7 @@ export async function rootAll(ns)
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns) 
+export async function main(ns: NS) 
 {
 	var servers = listServers(ns);
 	while (servers.length) 
