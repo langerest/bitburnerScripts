@@ -1,6 +1,6 @@
-import { NS, ScriptArg, AutocompleteData } from "..";
+import { NS, ScriptArg, AutocompleteData } from "../..";
 
-/** @param {import("..").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns: NS) 
 {
     var target = ns.args[0] as string;

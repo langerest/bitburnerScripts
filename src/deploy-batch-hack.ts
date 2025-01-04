@@ -23,8 +23,6 @@ export async function main(ns: NS)
     const minRam = args['minRam'] as number;
     const maxTime = args['maxTime'] as number;
     const homeReservedRam = args['homeReservedRam'] as number;
-
-    const batchHackManagerScript = "batch-hack-manager.js";
     const bitnodeMultiplier = 'data/bitnode-multiplier.txt';
     var serverWeakenRate;
     try
@@ -36,15 +34,17 @@ export async function main(ns: NS)
         serverWeakenRate = 1.0;
     }
 
-    const hackScript = 'batch-hack/hack.js';
-    const weakenScript = 'batch-hack/weaken.js';
-    const growScript = 'batch-hack/grow.js';
-    const basicHackScript = 'basic-hack.ts';
+    const hackScript = 'hacking/hack.js';
+    const weakenScript = 'hacking/weaken.js';
+    const growScript = 'hacking/grow.js';
+    const basicHackScript = 'hacking/basic-hack.js';
+    const batchHackManagerScript = "hacking/batch-hack-manager.js";
 
     const costForHack = ns.getScriptRam(hackScript);
     const costForWeaken = ns.getScriptRam(weakenScript);
     const costForGrow = ns.getScriptRam(growScript);
     const costPerThread = Math.max(costForHack, costForGrow, costForWeaken);
+    const costForManager = ns.getScriptRam(batchHackManagerScript);
 
     const scripts = [batchHackManagerScript, hackScript, growScript, weakenScript]
 
@@ -66,7 +66,7 @@ export async function main(ns: NS)
     var targetsthreadsMap: { [key: string]: BatchHackResult[]; } = {};
     for (const host of servers) 
     {
-        var ram = host.hostname == 'home' ? host.maxRam - homeReservedRam : host.maxRam;
+        var ram = (host.hostname == 'home' ? host.maxRam - homeReservedRam : host.maxRam) - costForManager;
         var threads = Math.floor(ram / costPerThread);
         if (threads < 1) 
         {

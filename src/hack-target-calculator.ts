@@ -14,7 +14,7 @@ export interface BatchHackResult
 }
 
 /** @param {import("../.").NS} ns **/
-export function getHackRates(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0): BatchHackResult
+export function getHackRates(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0, stepDelay: number = 50): BatchHackResult
 {
     if (target.minDifficulty === undefined || target.moneyMax === undefined)
     {
@@ -34,8 +34,6 @@ export function getHackRates(ns: NS, threads: number, target: Server, serverWeak
     const threadHardeningForHack = 0.002;
     // four weaken threads per 5 grow threads
     const threadHardeningForGrow = 0.004;
-
-    const stepDelay = 50;
 
     var percentageToSteal = 99;
     var actualPercentageToSteal;
@@ -61,26 +59,22 @@ export function getHackRates(ns: NS, threads: number, target: Server, serverWeak
         var threadsCycle = threadsForHack + threadsForGrow + threadsToWeakenFromHack + threadsToWeakenFromGrow;
         var cyclesAvailable = Math.floor(threads / threadsCycle);
 
-        // calculate amount needed to grow to replace what was stolen and how many grow threads necessary
-        if (cyclesAvailable < 1) 
-        {
-            if (percentageToSteal > 1) 
-            {
-                percentageToSteal--;
-            } 
-            else 
-            {
-                return {
-                    server: target.hostname,
-                    percentage: 0,
-                    rate: 0
-                };
-            }
-        } 
-        else 
+        if (cyclesAvailable >= 1) 
         {
             isPerfect = true;
+            continue;
         }
+
+        if (percentageToSteal <= 1) 
+        {
+            return {
+                server: target.hostname,
+                percentage: 0,
+                rate: 0
+            };
+        } 
+        
+        percentageToSteal --;
     }
     while (!isPerfect)
     
@@ -99,35 +93,23 @@ export function getHackRates(ns: NS, threads: number, target: Server, serverWeak
 }
 
 /** @param {import("../.").NS} ns */
-export function getHackTarget(ns: NS, threads: number, serverWeakenRate: number = 1.0) 
+export function getHackTarget(ns: NS, threads: number, serverWeakenRate: number = 1.0, stepDelay: number = 50) 
 {
     const serverNames = listServers(ns);
-    var servers = serverNames.map(ns.getServer);
-    servers = servers.filter(server => !server.purchasedByPlayer && (server.moneyMax || 0) > 0 &&
+    var servers = serverNames.map(ns.getServer)
+        .filter(server => !server.purchasedByPlayer && (server.moneyMax || 0) > 0 &&
         server.hasAdminRights && server.requiredHackingSkill != undefined && server.requiredHackingSkill <= ns.getHackingLevel());
-    var results: BatchHackResult[] = []
-    for (const server of servers) 
-    {
-        var result = getHackRates(ns, threads, server, serverWeakenRate);
-        if (result['rate'] > 0) 
-        {
-            results.push(result);
-        }
-    }
-
-    results.sort((a, b) => {
-        return b['rate'] - a['rate'];
-    });
-
-    return results;
+    return servers.map(server => getHackRates(ns, threads, server, serverWeakenRate, stepDelay))
+        .filter(result => result.rate > 0)
+        .sort((a, b) => (b.rate - a.rate));
 }
 
 /** @param {import("../.").NS} ns */
 export function getAvailableThreads(ns: NS, server: Server, reservedRam: number = 0)
 {
-    const hackScript = 'batch-hack/hack.js';
-    const weakenScript = 'batch-hack/weaken.js';
-    const growScript = 'batch-hack/grow.js';
+    const hackScript = 'hacking/hack.js';
+    const weakenScript = 'hacking/weaken.js';
+    const growScript = 'hacking/grow.js';
     const costForHack = ns.getScriptRam(hackScript);
     const costForWeaken = ns.getScriptRam(weakenScript);
     const costForGrow = ns.getScriptRam(growScript);
@@ -141,9 +123,8 @@ export function getTotalAvailableThreads(ns: NS)
 {
     const serverNames = openedServers(ns);
     var servers = serverNames.map(ns.getServer);
-    return servers.map(server => getAvailableThreads(ns, server)).reduce(
-        (a, b) => a + b
-    );
+    return servers.map(server => getAvailableThreads(ns, server))
+        .reduce((a, b) => a + b);
 }
 
 /** @param {import("../.").NS} ns */

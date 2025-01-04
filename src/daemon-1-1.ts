@@ -4,7 +4,7 @@ import { rootAll } from "./root-all.js"
 
 /** @param {import("..").NS} ns */
 export async function main(ns: NS) {
-    const basicHackScript = "basic-hack.ts";
+    const basicHackScript = "basic-hack.js";
     const purchaseServerScript = "purchase-server.js";
     const nextDaemonScript = "daemon.js";
 

@@ -27,7 +27,7 @@ export function listServers(ns: NS)
 }
 
 /** @param {import("../.").NS} ns 
- * Lists the names of all servers on which you can run scripts.
+ * Lists the names of all servers on which you can run scripts excluding home.
 */
 export function openedServers(ns: NS)
 {
@@ -53,7 +53,7 @@ export function main(ns: NS)
         return;
     }
 
-    const servers = openedServers(ns);
+    const servers = openedServers(ns).concat(['home']);
     for (const server of servers) 
     {
         const used = ns.getServerUsedRam(server);

@@ -42,7 +42,7 @@ export async function main(ns: NS)
 		ns.tprint("This script deploys another script on a server with maximum threads possible.");
 		ns.tprint(`Usage: run ${ns.getScriptName()} HOST SCRIPT ARGUMENTS`);
 		ns.tprint("Example:");
-		ns.tprint(`> run ${ns.getScriptName()} n00dles basic-hack.ts foodnstuff`);
+		ns.tprint(`> run ${ns.getScriptName()} n00dles basic-hack.js foodnstuff`);
 		return;
 	}
 

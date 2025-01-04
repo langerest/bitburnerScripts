@@ -1,4 +1,4 @@
-/** @param {import("../../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) 
 {
 	const target = ns.args[0];
@@ -13,5 +13,5 @@ export async function main(ns)
 	}
 	
 	await ns.sleep(delay);
-	await ns.grow(target);
+	await ns.hack(target);
 }

@@ -5,7 +5,7 @@ import { listServers } from './opened-servers.js'
 /** @param {import("../.").NS} ns */
 export async function deployBasicHack(ns: NS, target: string, maxRam: number = 0, homeReservedRam: number = 32)
 {
-    const script = "basic-hack.js";
+    const script = "hacking/basic-hack.js";
 
     if (!ns.hasRootAccess(target))
     {

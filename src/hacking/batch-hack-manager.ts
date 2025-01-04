@@ -1,23 +1,25 @@
+import { NS, ScriptArg, AutocompleteData } from "../..";
+
 const argSchema = 
 [
 	['target', ''],
 	['reservedRam', 0],
 	['serverWeakenRate', 1]
-];
+] as [string, ScriptArg | string[]][];
 
-export function autocomplete(data, args) 
+export function autocomplete(data: AutocompleteData, args: ScriptArg[]) 
 {
 	data.flags(argSchema);
 	return data.servers;
 }
 
-/** @param {import("..").NS} ns */
-export async function main(ns) 
+/** @param {import("../..").NS} ns */
+export async function main(ns: NS) 
 {
 	const args = ns.flags(argSchema);
-	const target = args['target'];
-	const reservedRam = args['reservedRam'];
-	const serverWeakenRate = args['serverWeakenRate'];
+	const target = args['target'] as string;
+	const reservedRam = args['reservedRam'] as number;
+	const serverWeakenRate = args['serverWeakenRate'] as number;
 
 	const host = ns.getHostname();
 
@@ -28,11 +30,11 @@ export async function main(ns)
 	// four weaken threads per 5 grow threads
 	const threadHardeningForGrow = 0.004;
 
-	const hackScript = 'batch-hack/hack.js';
-	const weakenScript = 'batch-hack/weaken.js';
-	const growScript = 'batch-hack/grow.js';
-	const basicHackScript = 'basic-hack.ts';
-	const batchHackManagerScript = 'batch-hack-manager.js';
+	const hackScript = 'hacking/hack.js';
+	const weakenScript = 'hacking/weaken.js';
+	const growScript = 'hacking/grow.js';
+	const basicHackScript = 'hacking/basic-hack.js';
+	const batchHackManagerScript = 'hacking/batch-hack-manager.js';
 
 	var timeForGrow;
 	var timeForWeaken;
@@ -131,12 +133,12 @@ export async function main(ns)
 			timeForWeaken = ns.getWeakenTime(target);
 			timeForGrow = ns.getGrowTime(target);
 			var isPerfect = false;
-			var threadsForHack;
-			var threadsForGrow;
-			var threadsToWeakenFromHack;
-			var threadsToWeakenFromGrow;
-			var totalHackCost;
-			var totalGrowCost;
+			var threadsForHack: number;
+			var threadsForGrow: number;
+			var threadsToWeakenFromHack: number;
+			var threadsToWeakenFromGrow: number;
+			var totalHackCost: number;
+			var totalGrowCost: number;
 			var percentageToSteal = 99;
 			do 
 			{
