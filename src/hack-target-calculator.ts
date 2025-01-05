@@ -1,5 +1,12 @@
-import { NS, Server } from "..";
+import { NS, Player, Server } from "..";
 import { listServers, openedServers } from "./opened-servers.js";
+
+//constant, base potency of weaken threads
+const baseThreadPotencyForWeaken = 0.05;
+// two weaken threads per 10 hack threads
+const threadHardeningForHack = 0.002;
+// four weaken threads per 5 grow threads
+const threadHardeningForGrow = 0.004;
 
 export interface BatchHackResult
 {
@@ -13,10 +20,62 @@ export interface BatchHackResult
     threadsToWeakenFromGrow?: number
 }
 
-/** @param {import("../.").NS} ns **/
-export function getHackRates(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0, stepDelay: number = 50): BatchHackResult
+export interface BatchHackScripts
 {
-    if (target.minDifficulty === undefined || target.moneyMax === undefined)
+    hackScript: string,
+    growScript: string,
+    weakenScript: string
+}
+
+/** @param {import("../.").NS} ns **/
+export function getThreadsForWeaken(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0): BatchHackResult
+{
+    if (target.hackDifficulty === undefined || target.minDifficulty === undefined)
+    {
+        return {
+            server: target.hostname,
+            percentage: 0,
+            rate: 0,
+            threadsToWeakenFromGrow: 0
+        };
+    }
+
+    //constant, potency of weaken threads
+    const threadPotencyForWeaken = baseThreadPotencyForWeaken * serverWeakenRate;
+    var threadsForWeaken = Math.max(Math.min(Math.ceil((target.hackDifficulty - target.minDifficulty) / threadPotencyForWeaken), 0), threads);
+    return {
+        server: target.hostname,
+        percentage: 0,
+        rate: 0,
+        threadsToWeakenFromGrow: threadsForWeaken
+    }
+}
+
+/** @param {import("../.").NS} ns **/
+function getHackRatesWithoutFormula(ns: NS, target: Server, stepDelay: number = 50): BatchHackResult
+{
+    if (target.minDifficulty === undefined || target.moneyMax === undefined || 
+        target.requiredHackingSkill === undefined || target.requiredHackingSkill > ns.getHackingLevel() * 0.5)
+    {
+        return {
+            server: target.hostname,
+            percentage: 0,
+            rate: 0
+        };
+    }
+
+    return {
+        server: target.hostname,
+        percentage: 0,
+        rate: target.moneyMax / target.minDifficulty,
+        time: ns.getWeakenTime(target.hostname) + stepDelay * 3
+    };
+}
+
+/** @param {import("../.").NS} ns **/
+function getHackRatesWithFormula(ns: NS, threads: number, target: Server, player: Player, serverWeakenRate: number = 1.0, stepDelay: number = 50): BatchHackResult
+{
+    if (threads < 4 || target.minDifficulty === undefined || target.moneyMax === undefined)
     {
         return {
             server: target.hostname,
@@ -29,43 +88,29 @@ export function getHackRates(ns: NS, threads: number, target: Server, serverWeak
     target.moneyAvailable = target.moneyMax;
 
     //constant, potency of weaken threads
-    const threadPotencyForWeaken = 0.05 * serverWeakenRate;
-    // two weaken threads per 10 hack threads
-    const threadHardeningForHack = 0.002;
-    // four weaken threads per 5 grow threads
-    const threadHardeningForGrow = 0.004;
+    const threadPotencyForWeaken = baseThreadPotencyForWeaken * serverWeakenRate;
 
-    var percentageToSteal = 99;
+    var percentageToSteal = 0.99;
     var actualPercentageToSteal;
     var isPerfect = false;
+    // calculate amount to steal and number of hack threads necessary
+    var hackPercent = ns.formulas.hacking.hackPercent(target, player);
+    var maxThreadsForHack = Math.floor((threads - 2) / (1 + threadHardeningForHack / threadPotencyForWeaken));
+    var threadsForHack = Math.min(Math.max(Math.floor(percentageToSteal / hackPercent), 1), maxThreadsForHack);
     do 
     {
-        // calculate amount to steal and number of hack threads necessary
-        var hackPercent = ns.hackAnalyze(target.hostname);
-        var threadsForHack = Math.max(Math.floor(percentageToSteal / 100.0 / hackPercent), 1);
-        actualPercentageToSteal = Math.min(hackPercent * threadsForHack * 100, 99);
-        
-        // calculate amount needed to grow to replace what was stolen and how many grow threads necessary
-        var coForGrowth = 1.0 / (1.0 - actualPercentageToSteal / 100.0);
-        var threadsForGrow = Math.ceil((ns.growthAnalyze(target.hostname, coForGrowth)) * 1.05);
+        actualPercentageToSteal = Math.min(hackPercent * threadsForHack, 0.99);
+		var threadsToWeakenFromHack = Math.ceil(threadsForHack * threadHardeningForHack / threadPotencyForWeaken);
+		var threadsForGrow = Math.floor((threads - threadsForHack - threadsToWeakenFromHack) / (1 + threadHardeningForGrow / threadPotencyForWeaken));
+		var growPercent = ns.formulas.hacking.growPercent(target, threadsForGrow, player);
 
-        // calculate each amount of weakening needed to get back to minsec after our hack/grow threads
-        var secIncreaseFromGrow = threadHardeningForGrow * threadsForGrow;
-        var secIncreaseFromHack = threadHardeningForHack * threadsForHack;
-        var threadsToWeakenFromHack = Math.ceil(secIncreaseFromHack / threadPotencyForWeaken);
-        var threadsToWeakenFromGrow = Math.ceil(secIncreaseFromGrow / threadPotencyForWeaken);
-
-        // calculate how many threads we can run at once
-        var threadsCycle = threadsForHack + threadsForGrow + threadsToWeakenFromHack + threadsToWeakenFromGrow;
-        var cyclesAvailable = Math.floor(threads / threadsCycle);
-
-        if (cyclesAvailable >= 1) 
+        if (growPercent >= 1.0 / (1.0 - actualPercentageToSteal)) 
         {
             isPerfect = true;
             continue;
         }
 
-        if (percentageToSteal <= 1) 
+        if (threadsForHack <= 1) 
         {
             return {
                 server: target.hostname,
@@ -74,22 +119,35 @@ export function getHackRates(ns: NS, threads: number, target: Server, serverWeak
             };
         } 
         
-        percentageToSteal --;
+        threadsForHack --;
     }
     while (!isPerfect)
-    
+
+    var threadsToWeakenFromGrow = Math.ceil(threadsForGrow * threadHardeningForGrow / threadPotencyForWeaken);
     var timeForWeaken = ns.getWeakenTime(target.hostname);
     var cycleTime = timeForWeaken + stepDelay * 3;
     return {
         server: target.hostname,
         percentage: actualPercentageToSteal,
         time: cycleTime,
-        rate: target.moneyMax * actualPercentageToSteal / cycleTime * 10,
+        rate: target.moneyMax * actualPercentageToSteal / cycleTime * 1000,
         threadsForHack: threadsForHack,
         threadsForGrow: threadsForGrow,
         threadsToWeakenFromHack: threadsToWeakenFromHack,
         threadsToWeakenFromGrow: threadsToWeakenFromGrow
     };
+}
+
+/** @param {import("../.").NS} ns **/
+export function getHackRates(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0, stepDelay: number = 50)
+{
+    if (ns.fileExists("Formulas.exe"))
+    {
+        let player = ns.getPlayer();
+        return getHackRatesWithFormula(ns, threads, target, player, serverWeakenRate, stepDelay);
+    }
+
+    return getHackRatesWithoutFormula(ns, target, stepDelay);
 }
 
 /** @param {import("../.").NS} ns */
@@ -104,16 +162,26 @@ export function getHackTarget(ns: NS, threads: number, serverWeakenRate: number 
         .sort((a, b) => (b.rate - a.rate));
 }
 
+export function getBatchHackScripts(): BatchHackScripts
+{
+    const hackScript = 'hacking/hack.js';
+    const growScript = 'hacking/grow.js';
+    const weakenScript = 'hacking/weaken.js';
+    
+    return {
+        hackScript: hackScript,
+        growScript: growScript,
+        weakenScript: weakenScript
+    }
+}
+
 /** @param {import("../.").NS} ns */
 export function getAvailableThreads(ns: NS, server: Server, reservedRam: number = 0)
 {
-    const hackScript = 'hacking/hack.js';
-    const weakenScript = 'hacking/weaken.js';
-    const growScript = 'hacking/grow.js';
-    const costForHack = ns.getScriptRam(hackScript);
-    const costForWeaken = ns.getScriptRam(weakenScript);
-    const costForGrow = ns.getScriptRam(growScript);
-    const costPerThread = Math.max(costForHack, costForGrow, costForWeaken);
+    var batchHackScripts = getBatchHackScripts();
+    const costPerThread = (Object.values(batchHackScripts) as string[])
+        .map(script => ns.getScriptRam(script))
+        .reduce((a, b) => Math.max(a, b));
 
     return Math.floor((server.maxRam - reservedRam) / costPerThread);
 }
@@ -130,7 +198,7 @@ export function getTotalAvailableThreads(ns: NS)
 /** @param {import("../.").NS} ns */
 export function parseBatchHackResult(ns: NS, result: BatchHackResult)
 {
-    var expression = `${result.server}: hack percentage: ${Math.round(result.percentage)}%, rate: ${ns.formatNumber(result.rate)}`
+    var expression = `${result.server}: hack percentage: ${ns.formatPercent(result.percentage)}, rate: ${ns.formatNumber(result.rate)}`
     if (result.time !== undefined)
     {
         expression = expression.concat(`, time: ${ns.tFormat(result['time'])}`);

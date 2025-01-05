@@ -76,10 +76,8 @@ export async function main(ns: NS)
         if (!(threads.toString() in targetsthreadsMap)) 
         {
             var targetResults = getHackTarget(ns, threads, serverWeakenRate);
-            ns.tprint(targetResults);
-
             targetResults = targetResults.filter(result => (result.time !== undefined && result.time <= maxTime));
-            targetResults = targetResults.filter(result => (result.rate >= targetResults[0].rate * 0.5));
+            targetResults = targetResults.filter(result => (result.rate >= targetResults[0].rate * 0.25));
             targetsthreadsMap[threads.toString()] = targetResults;
             for (const result of targetResults) 
             {

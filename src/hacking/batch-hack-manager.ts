@@ -107,7 +107,7 @@ export async function main(ns: NS)
 			timeForGrow = ns.getGrowTime(target);
 			timeForWeaken = ns.getWeakenTime(target);
 			var singleCycleCost = costForWeaken + costForGrow * threadPotencyForWeaken / threadHardeningForGrow;
-			var cyclesAvailable = Math.floor(availableRam / singleCycleCost);
+			var cyclesAvailable = availableRam / singleCycleCost;
 			var threadsForGrow = Math.max(Math.floor(cyclesAvailable * threadPotencyForWeaken / threadHardeningForGrow), 1);
 			var threadsForWeaken = Math.max(Math.floor((availableRam - costForGrow * threadsForGrow) / costForWeaken), 1);
 			var growDelay = (timeForWeaken - timeForGrow) - stepDelay;
