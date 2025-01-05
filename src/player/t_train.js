@@ -1,4 +1,4 @@
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     while(ns.getPlayer().strength < 100) {
         if (ns.getPlayer().className != 'training your strength at a gym') {

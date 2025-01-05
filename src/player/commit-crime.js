@@ -1,4 +1,4 @@
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     var crimes = ['Shoplift', 'Rob store', 'Mug someone', 'Larceny', 'Deal Drugs', 'Bond Forgery', 'Traffick illegal Arms',
     'Homicide', 'Grand theft Auto', 'Kidnap and Ransom', 'Assassinate', 'Heist'];

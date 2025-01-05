@@ -9,7 +9,7 @@ export function autocomplete(data, args) {
     return factions;
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     const faction_to_work = ns.args[0];
     var delay = 60000;

@@ -127,7 +127,7 @@ export const IndustrialFactors = {
     }
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export function calc_material(ns, warehouse_size, industry) {
     var realEstate = {
         amount: 0,
@@ -190,7 +190,7 @@ export function autocomplete(data, args) {
     ];
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     const warehouse_size = ns.args[0];
     const industry = ns.args[1];

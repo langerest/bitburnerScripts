@@ -1,4 +1,4 @@
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     const training = 'Train Combat';
     const vigil = 'Vigilante Justice';

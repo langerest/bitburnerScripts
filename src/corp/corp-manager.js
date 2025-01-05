@@ -7,19 +7,19 @@ const upgrade_size = 15;
 const jobs = ['Operations', 'Engineer', 'Business', 'Management', 'Research & Development'];
 const upgrades = ['Nuoptimal Nootropic Injector Implants', 'Speech Processor Implants', 'Neural Accelerators', 'FocusWires', 'Project Insight'];
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 async function upgrade(ns, name) {
     ns.tprint(`Upgrading ${name} to level ${ns.corporation.getUpgradeLevel(name) + 1}.`);
     ns.corporation.levelUpgrade(name);
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 async function advert(ns) {
     ns.tprint(`Hire AdVert in division ${division} to No. ${ns.corporation.getHireAdVertCount(division) + 1}.`);
     ns.corporation.hireAdVert(division);
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 async function upgradeOffice(ns, city) {
     ns.tprint(`Upgrade office size in ${city} of division ${division}.`)
     ns.corporation.upgradeOfficeSize(division, city, upgrade_size);
@@ -32,7 +32,7 @@ async function upgradeOffice(ns, city) {
     }
 }
 
-/** @param {import("../.").NS} ns */
+/** @param {import("../..").NS} ns */
 export async function main(ns) {
     while (true) {
         var tasks = [{

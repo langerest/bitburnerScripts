@@ -130,7 +130,7 @@ function getHackRatesWithFormula(ns: NS, threads: number, target: Server, player
         server: target.hostname,
         percentage: actualPercentageToSteal,
         time: cycleTime,
-        rate: target.moneyMax * actualPercentageToSteal / cycleTime * 1000,
+        rate: target.moneyMax * actualPercentageToSteal * ns.formulas.hacking.hackChance(target, player) / cycleTime * 1000,
         threadsForHack: threadsForHack,
         threadsForGrow: threadsForGrow,
         threadsToWeakenFromHack: threadsToWeakenFromHack,
@@ -141,7 +141,7 @@ function getHackRatesWithFormula(ns: NS, threads: number, target: Server, player
 /** @param {import("../.").NS} ns **/
 export function getHackRates(ns: NS, threads: number, target: Server, serverWeakenRate: number = 1.0, stepDelay: number = 50)
 {
-    if (ns.fileExists("Formulas.exe"))
+    if (ns.fileExists("Formulas.exe", "home"))
     {
         let player = ns.getPlayer();
         return getHackRatesWithFormula(ns, threads, target, player, serverWeakenRate, stepDelay);
