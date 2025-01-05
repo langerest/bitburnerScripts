@@ -1,4 +1,4 @@
-import { NS, ScriptArg, AutocompleteData, Server } from "..";
+import { NS, ScriptArg, AutocompleteData, Server, RunOptions } from "..";
 import { listServers } from './opened-servers.js'
 import { BatchHackResult, getHackTarget } from './hack-target-calculator.js'
 
@@ -39,6 +39,7 @@ export async function main(ns: NS)
     const growScript = 'hacking/grow.js';
     const basicHackScript = 'hacking/basic-hack.js';
     const batchHackManagerScript = "hacking/batch-hack-manager.js";
+    const batchHackBaseScript = "hacking/batch-hack-base.js";
 
     const costForHack = ns.getScriptRam(hackScript);
     const costForWeaken = ns.getScriptRam(weakenScript);
@@ -46,7 +47,7 @@ export async function main(ns: NS)
     const costPerThread = Math.max(costForHack, costForGrow, costForWeaken);
     const costForManager = ns.getScriptRam(batchHackManagerScript);
 
-    const scripts = [batchHackManagerScript, hackScript, growScript, weakenScript]
+    const scripts = [batchHackBaseScript, batchHackManagerScript, hackScript, growScript, weakenScript]
 
     var serverNames = listServers(ns);
     serverNames.push('home');
@@ -129,9 +130,12 @@ export async function main(ns: NS)
                 {
                     if (!ns.isRunning(batchHackManagerScript, host.hostname, '--target', target, '--serverWeakenRate', serverWeakenRate)) {
                         ns.killall(host.hostname);
-                        await ns.scp(scripts, host.hostname);
+                        ns.scp(scripts, host.hostname);
                         ns.tprint(`Launching script '${batchHackManagerScript}' on server '${host.hostname}' targeting '${target}'.`);
-                        ns.exec(batchHackManagerScript, host.hostname, 1, '--target', target, '--serverWeakenRate', serverWeakenRate);
+                        let runOptions: RunOptions = {
+                            "ramOverride": ns.getScriptRam(batchHackManagerScript, host.hostname) - ns.getFunctionRamCost("getServer")
+                        };
+                        ns.exec(batchHackManagerScript, host.hostname, runOptions, '--target', target, '--serverWeakenRate', serverWeakenRate);
                     }
                 }
             }
