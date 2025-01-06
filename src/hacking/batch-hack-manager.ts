@@ -133,7 +133,6 @@ export async function main(ns: NS)
             timeForHack = ns.getHackTime(target);
             timeForWeaken = ns.getWeakenTime(target);
             timeForGrow = ns.getGrowTime(target);
-            var isPerfect = false;
             var threadsForHack: number;
             var threadsForGrow: number;
             var threadsToWeakenFromHack: number;
@@ -145,44 +144,60 @@ export async function main(ns: NS)
             var amountToSteal = maxMoney * percentageToSteal;
             threadsForHack = Math.max(Math.floor(ns.hackAnalyzeThreads(target, amountToSteal)), 1);
             threadsForHack = Math.min(threadsForHack, Math.floor(availableRam / costForHack));
-            do 
+            let minThreadsNotWorking = threadsForHack + 1;
+            let maxThreadsWorking = 0;
+            while (minThreadsNotWorking - maxThreadsWorking > 1)
             {
                 percentageToSteal = Math.min(ns.hackAnalyze(target) * threadsForHack, 0.99);
                 totalHackCost = threadsForHack * costForHack;
 
                 // calculate amount needed to grow to replace what was stolen and how many grow threads necessary
-                var coForGrowth = 1.0 / (1.0 - percentageToSteal);
+                let coForGrowth = 1.0 / (1.0 - percentageToSteal);
                 threadsForGrow = Math.ceil(ns.growthAnalyze(target, coForGrowth, cpuCores) * 1.05);
                 totalGrowCost = threadsForGrow * costForGrow;
 
                 // calculate each amount of weakening needed to get back to minsec after our hack/grow threads
-                var secIncreaseFromGrow = threadHardeningForGrow * threadsForGrow;
-                var secIncreaseFromHack = threadHardeningForHack * threadsForHack;
+                let secIncreaseFromGrow = threadHardeningForGrow * threadsForGrow;
+                let secIncreaseFromHack = threadHardeningForHack * threadsForHack;
                 threadsToWeakenFromHack = Math.ceil(secIncreaseFromHack / threadPotencyForWeaken);
                 threadsToWeakenFromGrow = Math.ceil(secIncreaseFromGrow / threadPotencyForWeaken);
-                var totalWeakenCost = (threadsToWeakenFromGrow + threadsToWeakenFromHack) * costForWeaken;
+                let totalWeakenCost = (threadsToWeakenFromGrow + threadsToWeakenFromHack) * costForWeaken;
 
                 // calculate how many threads we can run at once
-                var totalCycleCost = totalHackCost + totalGrowCost + totalWeakenCost;
-                var cycleThreadsAvailable = Math.floor(availableRam / totalCycleCost);
-                if (cycleThreadsAvailable < 1) 
+                let totalCycleCost = totalHackCost + totalGrowCost + totalWeakenCost;
+                let cycleThreadsAvailable = Math.floor(availableRam / totalCycleCost);
+                if (cycleThreadsAvailable >= 1) 
                 {
-                    if (threadsForHack > 1) 
-                    {
-                        threadsForHack--;
-                    } 
-                    else 
-                    {
-                        ns.tprint(`Ram of '${host}' is too small to hack '${target}'. Aborting.`);
-                        return;
-                    }
-                } 
-                else 
-                {
-                    isPerfect = true;
+                    maxThreadsWorking = threadsForHack;
                 }
+                else
+                {
+                    minThreadsNotWorking = threadsForHack;
+                }
+
+                threadsForHack = Math.max(Math.floor((maxThreadsWorking + minThreadsNotWorking) / 2), maxThreadsWorking + 1);
             }
-            while (!isPerfect)
+
+            threadsForHack = maxThreadsWorking;
+            if (threadsForHack < 1)
+            {
+                ns.tprint(`Ram of '${host}' is too small to hack '${target}'. Aborting.`);
+                return;
+            }
+
+            percentageToSteal = Math.min(ns.hackAnalyze(target) * threadsForHack, 0.99);
+            totalHackCost = threadsForHack * costForHack;
+
+            // calculate amount needed to grow to replace what was stolen and how many grow threads necessary
+            var coForGrowth = 1.0 / (1.0 - percentageToSteal);
+            threadsForGrow = Math.ceil(ns.growthAnalyze(target, coForGrowth, cpuCores) * 1.05);
+            totalGrowCost = threadsForGrow * costForGrow;
+
+            // calculate each amount of weakening needed to get back to minsec after our hack/grow threads
+            var secIncreaseFromGrow = threadHardeningForGrow * threadsForGrow;
+            var secIncreaseFromHack = threadHardeningForHack * threadsForHack;
+            threadsToWeakenFromHack = Math.ceil(secIncreaseFromHack / threadPotencyForWeaken);
+            threadsToWeakenFromGrow = Math.ceil(secIncreaseFromGrow / threadPotencyForWeaken);
 
             var hackDelay = (timeForWeaken - timeForHack) - stepDelay;
             var growDelay = (timeForWeaken - timeForGrow) + stepDelay;

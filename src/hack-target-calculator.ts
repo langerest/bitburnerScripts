@@ -92,38 +92,45 @@ function getHackRatesWithFormula(ns: NS, threads: number, target: Server, player
 
     var percentageToSteal = 0.99;
     var actualPercentageToSteal;
-    var isPerfect = false;
     // calculate amount to steal and number of hack threads necessary
     var hackPercent = ns.formulas.hacking.hackPercent(target, player);
     var maxThreadsForHack = Math.floor((threads - 2) / (1 + threadHardeningForHack / threadPotencyForWeaken));
     var threadsForHack = Math.min(Math.max(Math.floor(percentageToSteal / hackPercent), 1), maxThreadsForHack);
-    do 
+    let minThreadsNotWorking = threadsForHack + 1;
+    let maxThreadsWorking = 0;
+    while (minThreadsNotWorking - maxThreadsWorking > 1) 
     {
         actualPercentageToSteal = Math.min(hackPercent * threadsForHack, 0.99);
-		var threadsToWeakenFromHack = Math.ceil(threadsForHack * threadHardeningForHack / threadPotencyForWeaken);
-		var threadsForGrow = Math.floor((threads - threadsForHack - threadsToWeakenFromHack) / (1 + threadHardeningForGrow / threadPotencyForWeaken));
-		var growPercent = ns.formulas.hacking.growPercent(target, threadsForGrow, player);
+        let threadsToWeakenFromHack = Math.ceil(threadsForHack * threadHardeningForHack / threadPotencyForWeaken);
+        let threadsForGrow = Math.floor((threads - threadsForHack - threadsToWeakenFromHack) / (1 + threadHardeningForGrow / threadPotencyForWeaken));
+        let growPercent = ns.formulas.hacking.growPercent(target, threadsForGrow, player);
 
         if (growPercent >= 1.0 / (1.0 - actualPercentageToSteal)) 
         {
-            isPerfect = true;
-            continue;
+            maxThreadsWorking = threadsForHack;
         }
-
-        if (threadsForHack <= 1) 
+        else
         {
-            return {
-                server: target.hostname,
-                percentage: 0,
-                rate: 0
-            };
-        } 
+            minThreadsNotWorking = threadsForHack;
+        }
         
-        threadsForHack --;
+        threadsForHack = Math.max(Math.floor((maxThreadsWorking + minThreadsNotWorking) / 2), maxThreadsWorking + 1);
     }
-    while (!isPerfect)
 
-    var threadsToWeakenFromGrow = Math.ceil(threadsForGrow * threadHardeningForGrow / threadPotencyForWeaken);
+    threadsForHack = maxThreadsWorking;
+    if (threadsForHack < 1)
+    {
+        return {
+            server: target.hostname,
+            percentage: 0,
+            rate: 0
+        };
+    }
+    
+    actualPercentageToSteal = Math.min(hackPercent * threadsForHack, 0.99);
+    let threadsToWeakenFromHack = Math.ceil(threadsForHack * threadHardeningForHack / threadPotencyForWeaken);
+    let threadsForGrow = Math.floor((threads - threadsForHack - threadsToWeakenFromHack) / (1 + threadHardeningForGrow / threadPotencyForWeaken));
+    let threadsToWeakenFromGrow = Math.ceil(threadsForGrow * threadHardeningForGrow / threadPotencyForWeaken);
     var timeForWeaken = ns.getWeakenTime(target.hostname);
     var cycleTime = timeForWeaken + stepDelay * 3;
     return {
