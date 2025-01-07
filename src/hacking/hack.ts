@@ -1,10 +1,10 @@
 import { NS } from "../..";
-import { BatchHackJob } from "./batch-hack-base";
+import { BatchHack } from "./batch-hack-base";
 
 /** @param {import("../..").NS} ns */
 export async function main(ns: NS) 
 {
-    const job = JSON.parse(ns.args[0] as string) as BatchHackJob;
+    const job = JSON.parse(ns.args[0] as string) as BatchHack.Job;
     let delay = job.startTime - Date.now();
     if (delay < 0)
     {

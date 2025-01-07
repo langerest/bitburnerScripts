@@ -1,8 +1,9 @@
-import { NS, ScriptArg } from "..";
+import { AutocompleteData, NS, ScriptArg } from "..";
 import { openedServers } from "./opened-servers.js";
 
 export function purchaseServer(ns: NS, minRam: number = 32, minPercentageTotalRam: number = 0.1)
 {
+    ns.disableLog("getServerMaxRam");
     if (minRam > ns.getPurchasedServerMaxRam())
     {
         ns.tprint(`Minimum ram requested for new server ${minRam} GB exceeds the maximum allowed ram for purchased server ${ns.getPurchasedServerMaxRam()} GB. Aborting`);
@@ -17,7 +18,7 @@ export function purchaseServer(ns: NS, minRam: number = 32, minPercentageTotalRa
         purchasedServers = purchasedServers.filter(server => ns.getServerMaxRam(server) < ns.getPurchasedServerMaxRam());
         if (!purchasedServers.length)
         {
-            ns.tprint(`Maximum allowed amount of servers purchased and all servers are at the maximum allowed ram. Aborting.`);
+            ns.print(`Maximum allowed amount of servers purchased and all servers are at the maximum allowed ram. Aborting.`);
             return;
         }
 
@@ -29,79 +30,63 @@ export function purchaseServer(ns: NS, minRam: number = 32, minPercentageTotalRa
     let totalRam = openedServers(ns).map(ns.getServerMaxRam).reduce((a, b) => a + b );
     ram = Math.max(ram, totalRam * minPercentageTotalRam);
     ram = Math.pow(2, Math.ceil(Math.log2(ram)));
-    let cost = ns.getPurchasedServerCost(ram);
-    if (serverToUpgrade !== undefined)
-    {
-        cost = ns.getPurchasedServerUpgradeCost(serverToUpgrade, ram);
-    }
-
-    if (cost > ns.getServerMoneyAvailable("home"))
-    {
-        ns.print(`Current money: '${ns.getServerMoneyAvailable("home")}', Money need to buy '${ram}' GB server: ${ns.getPurchasedServerCost(ram)}`);
-        return;
-    }
+    ram = Math.min(ram, ns.getPurchasedServerMaxRam());
 
     if (serverToUpgrade === undefined)
     {
         let hostname = ns.purchaseServer('pserv', ram);
-        ns.tprint(`Succussfully purchased server ${hostname} at ${ram} GB`);
+        if (hostname)
+        {
+            ns.tprint(`Succussfully purchased server ${hostname} at ${ram} GB`);
+        }
+
         return;
     }
 
     if (ns.upgradePurchasedServer(serverToUpgrade, ram))
     {
         ns.tprint(`Succussfully upgraded server ${serverToUpgrade} to ${ram} GB`);
-        return;
     }
 
-    ns.tprint(`Failed to upgrade server ${serverToUpgrade}`);
+    return;
+}
+
+const argSchema = 
+[
+    ["minRam", 32],
+    ["minPercentageTotalRam", 0.1],
+    ["keepRunning", true]
+] as [string, ScriptArg | string[]][];
+
+export function autocomplete(data: AutocompleteData, args: ScriptArg) 
+{
+    data.flags(argSchema);
+    return [];
 }
 
 /** @param {import("../.").NS} ns **/
 export async function main(ns: NS) 
 {
-    const args = ns.flags(
-        [
-            ["help", false]
-        ]
-    );
+    const args = ns.flags(argSchema);
+    const minRam = args['minRam'] as number;
+    const minPercentageTotalRam = args['minPercentageTotalRam'] as number;
+    const keepRuning = args['keepRuning'] as boolean;
+    const sleepInterval = 10000;
 
-    const ram = (args._ as ScriptArg[])[0] as number;
-
-    if (ram > ns.getPurchasedServerMaxRam()) 
+    do
     {
-        ns.tprint(`Ram exceeds maximum. Aborting.`);
-        return;
-    }
-
-    while (ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) 
-    {
-        if (ns.getServerMoneyAvailable("home") > ns.getPurchasedServerCost(ram)) 
+        purchaseServer(ns, minRam, minPercentageTotalRam);
+        if (keepRuning)
         {
-            var hostname = ns.purchaseServer('pserv', ram);
-            ns.tprint(`Succussfully purchased server ${hostname}`);
-        } 
-        else 
-        {
-            ns.print(`Current money: '${ns.getServerMoneyAvailable("home")}', Money need to buy '${ram}' GB server: ${ns.getPurchasedServerCost(ram)}`);
-            await ns.sleep(10000);
-        }
-    }
-
-    for (const server of ns.getPurchasedServers()) 
-    {
-        if (ns.getServerMaxRam(server) < ram) 
-        {
-            while (ns.getServerMoneyAvailable("home") < ns.getPurchasedServerCost(ram)) 
+            let purchasedServers = ns.getPurchasedServers();
+            if (purchasedServers.filter(server => ns.getServerMaxRam(server) >= ns.getPurchasedServerMaxRam()).length >= ns.getPurchasedServerLimit())
             {
-                ns.print(`Current money: '${ns.getServerMoneyAvailable("home")}', Money need to buy '${ram}' GB server: ${ns.getPurchasedServerCost(ram)}`);
-                await ns.sleep(10000);
+                ns.tprint("Purchasing server complete.");
+                return;
             }
-            
-            ns.killall(server);
-            ns.deleteServer(server);
-            var hostname = ns.purchaseServer('pserv', ram);
-            ns.tprint(`Succussfully deleted server '${server}' and purchased new server ${hostname}`);
+
+            await ns.sleep(sleepInterval);
         }
     }
+    while(keepRuning)
 }

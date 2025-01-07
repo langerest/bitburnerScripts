@@ -8,6 +8,8 @@ import { openedServers } from "./opened-servers.js";
 export async function main(ns: NS) {
     const basicHackScript = "basic-hack.js";
     const deployBatchHackScript = "deploy-batch-hack.js";
+    ns.disableLog("getServerMaxRam");
+    ns.disableLog("scan");
 
     while (true)
     {
