@@ -9,8 +9,16 @@ export async function main(ns: NS)
     if (delay < 0)
     {
         ns.tprint(`Batch hack job is ${-delay} ms too late.`);
+        ns.writePort(ns.pid, -delay);
         delay = 0
+    }
+    else
+    {
+        ns.writePort(ns.pid, 0);
     }
     
     await ns.hack(job.target, { additionalMsec: delay });
+    ns.atExit(() => {
+            ns.writePort(job.port, JSON.stringify(job));
+    });
 }

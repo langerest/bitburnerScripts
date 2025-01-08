@@ -17,7 +17,7 @@ export namespace BatchHack
 
         protected ns: NS;
         protected threadPotencyForWeaken: number;
-        protected jobTypes: {[key: string]: JobType};
+        protected jobTypes: Record<JobType, JobTypeInfo>;
         protected jobs: BatchHack.Job[] = [];
         protected targetInfo: TargetInfo | null = null;
 
@@ -63,9 +63,11 @@ export namespace BatchHack
         }
     }
 
-    export interface JobType
+    export type JobType = "hack" | "grow" | "weakenForHack" | "weakenForGrow";
+
+    export interface JobTypeInfo
     {
-        type: string;
+        type: JobType;
         script: string;
         cost: number;
         timeMultiplier: number;
@@ -74,21 +76,19 @@ export namespace BatchHack
 
     export class Job
     {
-        type: string;
+        type: JobType;
         host: string = "";
         target: string;
         threads: number;
         startTime: number;
-        report: boolean;
         port: number;
 
-        constructor(ns: NS, type: string, target: string, threads: number, startTime: number, report: boolean)
+        constructor(ns: NS, type: JobType, target: string, threads: number, startTime: number)
         {
             this.type = type;
             this.target = target;
             this.threads = threads;
             this.startTime = startTime;
-            this.report = report;
             this.port = ns.pid;
         }
     }
@@ -101,6 +101,7 @@ export namespace BatchHack
         money: number;
         maxMoney: number;
         weakenTime: number;
+        delay: number;
         
         constructor(ns: NS, target: string)
         {
@@ -110,6 +111,7 @@ export namespace BatchHack
             this.money = ns.getServerMoneyAvailable(target);
             this.maxMoney = ns.getServerMaxMoney(target);
             this.weakenTime = ns.getWeakenTime(target);
+            this.delay = 0;
         }
     }
 }
