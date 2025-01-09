@@ -3,16 +3,16 @@ import { BatchHack } from "./batch-hack-base";
 
 class BatchHackManager extends BatchHack.BatchHackBase
 {
-    static batchHackManagerScript = 'hacking/batch-hack-manager.js';
-    static stepDelay = 5;
-    static offsetDelay = 80;
-    static delayToPreventFreeze = 20;
+    static delayInfo: BatchHack.DelayInfo = 
+    {
+        stepDelay: 5,
+        offsetDelay: 80
+    };
 
     host: string;
     cpuCores: number;
     target: string;
     reservedRam: number;
-    scriptRam: number;
 
     constructor(ns: NS, target: string, reservedRam: number, serverWeakenRate: number = 1.0)
     {
@@ -29,18 +29,16 @@ class BatchHackManager extends BatchHack.BatchHackBase
 
         this.target = target;
         this.reservedRam = reservedRam;
-        this.scriptRam = ns.getScriptRam(BatchHackManager.batchHackManagerScript);
+    }
+
+    updateHosts()
+    {
+        this.hosts = new BatchHack.Hosts(this.ns, [this.host], this.reservedRam);
     }
 
     updateTargetInfo()
     {
         this.targetInfo = new BatchHack.TargetInfo(this.ns, this.target);
-    }
-
-    getJobStartTime(type: BatchHack.JobType, currentTime: number, targetInfo: BatchHack.TargetInfo)
-    {
-        return currentTime + BatchHackManager.offsetDelay + BatchHackManager.stepDelay * this.jobTypes[type].order + 
-        (1 - this.jobTypes[type].timeMultiplier) * targetInfo.weakenTime;
     }
 
     computeThreads(targetInfo: BatchHack.TargetInfo, hackThreads: number)
@@ -61,32 +59,40 @@ class BatchHackManager extends BatchHack.BatchHackBase
 
     getJobs()
     {
+        if (this.hosts === null)
+        {
+            throw new Error("Invalid hosts.");
+        }
+
         if (this.targetInfo === null)
         {
             throw new Error("Invalid target info.");
         }
 
         this.jobs = [];
-        let availableRam = this.ns.getServerMaxRam(this.host) - Math.max(this.ns.getServerUsedRam(this.host), this.reservedRam + this.scriptRam);
         if (this.targetInfo.security > this.targetInfo.minSecurity) 
         {
             let type: BatchHack.JobType = "weakenForGrow";
-            let threads = Math.floor(availableRam / this.jobTypes[type].cost);
+            let threads = Math.floor(this.hosts.getMaxSingleHostRam() / this.jobTypes[type].cost);
             let currentTime = Date.now()
-            let job = new BatchHack.Job(this.ns, type, this.targetInfo.name, threads, this.getJobStartTime(type, currentTime, this.targetInfo));
+            let job = new BatchHack.Job(this.ns, this.jobTypes[type], this.targetInfo, threads, currentTime, BatchHackManager.delayInfo);
+            this.hosts.assign(job);
             this.jobs.push(job)
         } 
         else if (this.targetInfo.money < this.targetInfo.maxMoney) 
         {
             let singleCycleCost = this.jobTypes.weakenForGrow.cost + this.jobTypes.grow.cost * this.threadPotencyForWeaken / BatchHack.BatchHackBase.threadHardeningForGrow;
-            let cyclesAvailable = availableRam / singleCycleCost;
+            let cyclesAvailable = this.hosts.getMaxSingleHostRam() / singleCycleCost;
             let threadsForGrow = Math.max(Math.floor(cyclesAvailable * this.threadPotencyForWeaken / BatchHack.BatchHackBase.threadHardeningForGrow), 1);
-            let threadsForWeaken = Math.max(Math.floor((availableRam - this.jobTypes.grow.cost * threadsForGrow) / this.jobTypes.weakenForGrow.cost), 1);
+            let threadsForWeaken = Math.max(Math.floor((this.hosts.getMaxSingleHostRam() - this.jobTypes.grow.cost * threadsForGrow) / this.jobTypes.weakenForGrow.cost), 1);
             let currentTime = Date.now()
-            let weakenJob = new BatchHack.Job(this.ns, "weakenForGrow", this.targetInfo.name, threadsForWeaken, this.getJobStartTime("weakenForGrow", currentTime, this.targetInfo));
-            let growJob = new BatchHack.Job(this.ns, "grow", this.targetInfo.name, threadsForGrow, this.getJobStartTime("grow", currentTime, this.targetInfo));
-            this.jobs.push(growJob);
-            this.jobs.push(weakenJob);
+            let weakenJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, threadsForWeaken, currentTime, BatchHackManager.delayInfo);
+            let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, threadsForGrow, currentTime, BatchHackManager.delayInfo);
+            for (let job of [growJob, weakenJob])
+            {
+                this.hosts.assign(job);
+                this.jobs.push(job);
+            }
         } 
         else 
         {
@@ -100,7 +106,7 @@ class BatchHackManager extends BatchHack.BatchHackBase
             // calculate amount to steal and number of hack threads necessary
             let amountToSteal = this.targetInfo.maxMoney * percentageToSteal;
             hackThreads = Math.max(Math.floor(this.ns.hackAnalyzeThreads(this.targetInfo.name, amountToSteal)), 1);
-            hackThreads = Math.min(hackThreads, Math.floor(availableRam / this.jobTypes.hack.cost));
+            hackThreads = Math.min(hackThreads, Math.floor(this.hosts.getMaxSingleHostRam() / this.jobTypes.hack.cost));
             let minThreadsNotWorking = hackThreads + 1;
             let maxThreadsWorking = 0;
             while (minThreadsNotWorking - maxThreadsWorking > 1)
@@ -112,7 +118,7 @@ class BatchHackManager extends BatchHack.BatchHackBase
 
                 // calculate how many threads we can run at once
                 let totalCycleCost = totalHackCost + totalGrowCost + totalWeakenCost;
-                let cycleThreadsAvailable = Math.floor(availableRam / totalCycleCost);
+                let cycleThreadsAvailable = Math.floor(this.hosts.getMaxSingleHostRam() / totalCycleCost);
                 if (cycleThreadsAvailable >= 1) 
                 {
                     maxThreadsWorking = hackThreads;
@@ -134,54 +140,17 @@ class BatchHackManager extends BatchHack.BatchHackBase
 
             [growThreads, weakenForHackThreads, weakenForGrowThreads] = this.computeThreads(this.targetInfo, hackThreads);
             let currentTime = Date.now()
-            let weakenForHackJob = new BatchHack.Job(this.ns, "weakenForHack", this.targetInfo.name, weakenForHackThreads, this.getJobStartTime("weakenForHack", currentTime, this.targetInfo));
-            let weakenForGrowJob = new BatchHack.Job(this.ns, "weakenForGrow", this.targetInfo.name, weakenForGrowThreads, this.getJobStartTime("weakenForGrow", currentTime, this.targetInfo));
-            let growJob = new BatchHack.Job(this.ns, "grow", this.targetInfo.name, growThreads, this.getJobStartTime("grow", currentTime, this.targetInfo));
-            let hackJob = new BatchHack.Job(this.ns, "hack", this.targetInfo.name, hackThreads, this.getJobStartTime("hack", currentTime, this.targetInfo));
-            this.jobs.push(hackJob);
-            this.jobs.push(weakenForHackJob);
-            this.jobs.push(growJob);
-            this.jobs.push(weakenForGrowJob);
+            let weakenForHackJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForHack"], this.targetInfo, weakenForHackThreads, currentTime, BatchHackManager.delayInfo);
+            let weakenForGrowJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, weakenForGrowThreads, currentTime, BatchHackManager.delayInfo);
+            let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, growThreads, currentTime, BatchHackManager.delayInfo);
+            let hackJob = new BatchHack.Job(this.ns, this.jobTypes["hack"], this.targetInfo, hackThreads, currentTime, BatchHackManager.delayInfo);
+            for (let job of [hackJob, weakenForHackJob, growJob, weakenForGrowJob])
+            {
+                this.hosts.assign(job);
+                this.jobs.push(job);
+            }
+            
             this.ns.print(`Hack '${this.targetInfo.name}' for ${this.ns.formatPercent(percentageToSteal)}.`);
-        }
-    }
-
-    async deploy()
-    {
-        if (this.targetInfo === null)
-        {
-            throw new Error("Invalid target info.");
-        }
-
-        try
-        {
-            let port = this.ns.getPortHandle(this.ns.pid);
-            port.clear();
-            for (let job of this.jobs)
-            {
-                this.ns.print(`Deploy to ${job.type} job to '${job.target}' on '${this.host}' using ${job.threads} threads.`);
-                job.startTime += this.targetInfo.delay;
-                let pid = this.ns.exec(this.jobTypes[job.type].script, this.host, {threads: job.threads, temporary: true}, JSON.stringify(job));
-                await this.ns.nextPortWrite(pid);
-                this.targetInfo.delay += this.ns.readPort(pid);
-            }
-
-            this.jobs = this.jobs.reverse();
-            while (this.jobs.length > 0)
-            {
-                if (port.empty())
-                {
-                    await port.nextWrite();
-                }
-
-                this.ns.print(`Job finished ${port.read()}`);
-                this.jobs.pop();
-            }
-        }
-        catch(error)
-        {
-            this.ns.print(error);
-            await this.ns.asleep(BatchHackManager.delayToPreventFreeze);
         }
     }
 
@@ -189,6 +158,7 @@ class BatchHackManager extends BatchHack.BatchHackBase
     {
         while (true)
         {
+            this.updateHosts();
             this.updateTargetInfo();
             this.getJobs();
             await this.deploy();

@@ -17,7 +17,7 @@ export async function main(ns: NS)
         ns.writePort(ns.pid, 0);
     }
     
-    await ns.hack(job.target, { additionalMsec: delay });
+    await ns.hack(job.target.name, { additionalMsec: delay });
     ns.atExit(() => {
             ns.writePort(job.port, JSON.stringify(job));
     });
