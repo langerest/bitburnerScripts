@@ -8,7 +8,7 @@ export async function main(ns: NS)
     let delay = job.startTime - Date.now();
     if (delay < 0)
     {
-        ns.tprint(`Batch hack job is ${-delay} ms too late.`);
+        ns.print(`Batch hack job is ${-delay} ms too late.`);
         ns.writePort(ns.pid, -delay);
         delay = 0
     }

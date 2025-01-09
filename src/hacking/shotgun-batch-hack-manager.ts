@@ -1,5 +1,6 @@
 import { NS, ScriptArg, AutocompleteData } from "../..";
 import { BatchHack } from "./batch-hack-base";
+import { getHackTarget } from "/hack-target-calculator";
 import { openedServers } from "/opened-servers";
 
 class ShotgunBatchHackManager extends BatchHack.BatchHackBase
@@ -10,13 +11,11 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
         offsetDelay: 100
     };
 
-    target: string;
     homeReservedRam: number;
 
-    constructor(ns: NS, target: string, homeReservedRam: number, serverWeakenRate: number = 1.0)
+    constructor(ns: NS, homeReservedRam: number, serverWeakenRate: number = 1.0)
     {
         super(ns, serverWeakenRate);
-        this.target = target;
         this.homeReservedRam = homeReservedRam;
     }
 
@@ -38,7 +37,13 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
 
     updateTargetInfo()
     {
-        this.targetInfo = new BatchHack.TargetInfo(this.ns, this.target);
+        if (this.hosts === null)
+        {
+            throw new Error("Invalid hosts.");
+        }
+
+        let target = getHackTarget(this.ns, this.hosts.getMaxSingleHostRam() / this.jobTypes.hack.cost)[0].server;
+        this.targetInfo = new BatchHack.TargetInfo(this.ns, target);
     }
 
     computeThreads(targetInfo: BatchHack.TargetInfo, hackThreads: number)
@@ -47,7 +52,7 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
 
         // calculate amount needed to grow to replace what was stolen and how many grow threads necessary
         let coForGrowth = 1.0 / (1.0 - percentageToSteal);
-        let growThreads = Math.ceil(this.ns.growthAnalyze(targetInfo.name, coForGrowth));
+        let growThreads = Math.ceil(this.ns.growthAnalyze(targetInfo.name, coForGrowth) * 1.05); // * 1.05 to account for potential hacking skill increase
 
         // calculate each amount of weakening needed to get back to minsec after our hack/grow threads
         let secIncreaseFromGrow = BatchHack.BatchHackBase.threadHardeningForGrow * growThreads;
@@ -131,9 +136,9 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
                     break;
                 }
 
-                weakenForGrowThreads = growThreads * BatchHack.BatchHackBase.threadHardeningForGrow / this.threadPotencyForWeaken;
-                let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, growThreads, currentTime, ShotgunBatchHackManager.delayInfo);
-                let weakenForGrowJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, weakenForGrowThreads, currentTime, ShotgunBatchHackManager.delayInfo);
+                weakenForGrowThreads = Math.ceil(growThreads * BatchHack.BatchHackBase.threadHardeningForGrow / this.threadPotencyForWeaken);
+                let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, growThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
+                let weakenForGrowJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, weakenForGrowThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
 
                 for (let job of [growJob, weakenForGrowJob])
                 {
@@ -149,10 +154,10 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
             let growThreads: number;
             let weakenForHackThreads: number;
             let weakenForGrowThreads: number;
-            let percentageToSteal = 0.99;
+            let percentageToSteal = 0.5;
             // calculate amount to steal and number of hack threads necessary
             let amountToSteal = this.targetInfo.maxMoney * percentageToSteal;
-            let hackThreads = Math.max(Math.floor(this.ns.hackAnalyzeThreads(this.targetInfo.name, amountToSteal)), 1);
+            let hackThreads = Math.max(Math.round(this.ns.hackAnalyzeThreads(this.targetInfo.name, amountToSteal)), 1);
             hackThreads = Math.min(hackThreads, Math.floor(this.hosts.getMaxSingleHostRam() / this.jobTypes.hack.cost));
             while (hackThreads > 0)
             {
@@ -195,10 +200,10 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
                 }
     
                 [growThreads, weakenForHackThreads, weakenForGrowThreads] = this.computeThreads(this.targetInfo, hackThreads);
-                let weakenForHackJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForHack"], this.targetInfo, weakenForHackThreads, currentTime, ShotgunBatchHackManager.delayInfo);
-                let weakenForGrowJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, weakenForGrowThreads, currentTime, ShotgunBatchHackManager.delayInfo);
-                let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, growThreads, currentTime, ShotgunBatchHackManager.delayInfo);
-                let hackJob = new BatchHack.Job(this.ns, this.jobTypes["hack"], this.targetInfo, hackThreads, currentTime, ShotgunBatchHackManager.delayInfo);
+                let weakenForHackJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForHack"], this.targetInfo, weakenForHackThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
+                let weakenForGrowJob = new BatchHack.Job(this.ns, this.jobTypes["weakenForGrow"], this.targetInfo, weakenForGrowThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
+                let growJob = new BatchHack.Job(this.ns, this.jobTypes["grow"], this.targetInfo, growThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
+                let hackJob = new BatchHack.Job(this.ns, this.jobTypes["hack"], this.targetInfo, hackThreads, currentTime, ShotgunBatchHackManager.delayInfo, batch);
                 for (let job of [hackJob, weakenForHackJob, growJob, weakenForGrowJob])
                 {
                     this.hosts.assign(job);
@@ -208,6 +213,8 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
                 batch ++;
             }
         }
+
+        this.targetInfo.delay += Date.now() - currentTime;
     }
 
     async execute()
@@ -224,7 +231,6 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
 
 const argSchema = 
 [
-    ['target', ''],
     ['homeReservedRam', 0],
     ['serverWeakenRate', 1]
 ] as [string, ScriptArg | string[]][];
@@ -239,12 +245,11 @@ export function autocomplete(data: AutocompleteData, args: ScriptArg[])
 export async function main(ns: NS) 
 {
     const args = ns.flags(argSchema);
-    const target = args['target'] as string;
     const reservedRam = args['homeReservedRam'] as number;
     const serverWeakenRate = args['serverWeakenRate'] as number;
 
 	ns.disableLog('sleep');
 
-    let manager = new ShotgunBatchHackManager(ns, target, reservedRam, serverWeakenRate);
+    let manager = new ShotgunBatchHackManager(ns, reservedRam, serverWeakenRate);
     await manager.execute();
 }
