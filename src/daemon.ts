@@ -3,11 +3,12 @@ import { deployBasicHack } from "./deploy-basic-hack.js"
 import { rootAll } from "./root-all.js"
 import { purchaseServer } from "./purchase-server.js";
 import { openedServers } from "./opened-servers.js";
+import { getHackTarget } from "./hack-target-calculator";
 
 /** @param {import("..").NS} ns */
 export async function main(ns: NS) {
-    const basicHackScript = "basic-hack.js";
-    const deployBatchHackScript = "deploy-batch-hack.js";
+    const basicHackScript = "hacking/basic-hack.js";
+    const deployBatchHackScript = "hacking/shotgun-batch-hack-manager.js";
     ns.disableLog("getServerMaxRam");
     ns.disableLog("scan");
 
@@ -28,7 +29,8 @@ export async function main(ns: NS) {
             if (!ns.scriptRunning(deployBatchHackScript, "home"))
             {
                 ns.scriptKill(basicHackScript, "home");
-                var pid = ns.exec(deployBatchHackScript, "home", 1, "--homeReservedRam", homeReservedRam, "--noKill");
+                target = getHackTarget(ns, 100)[0].server;
+                var pid = ns.exec(deployBatchHackScript, "home", {temporary: true}, "--target", target, "--homeReservedRam", homeReservedRam);
             }
         }
         await ns.asleep(10000);

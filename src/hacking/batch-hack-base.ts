@@ -69,6 +69,13 @@ export namespace BatchHack
             {
                 throw new Error("Invalid target info.");
             }
+
+            if (this.jobs.length === 0)
+            {
+                this.ns.tprint('No job to deploy. Sleep 10 s.');
+                await this.ns.sleep(10000);
+                return;
+            }
     
             let port = this.ns.getPortHandle(this.ns.pid);
             port.clear();
@@ -199,12 +206,12 @@ export namespace BatchHack
             }
 
             this._sort();
-            this.hostsInfo.forEach((ram, index) => this._index.set(ram.name, index));
         }
 
         private _sort()
         {
             this.hostsInfo.sort((a, b) => a.ram - b.ram);
+            this.hostsInfo.forEach((ram, index) => this._index.set(ram.name, index));
         }
 
         getHost(server: string)
@@ -250,6 +257,14 @@ export namespace BatchHack
 
             this.getHost(job.host).ram += job.cost;
             this._sort();
+        }
+
+        deepCopy(ns: NS): Hosts
+        {
+            let copy = new Hosts(ns, []);
+            copy.hostsInfo = JSON.parse(JSON.stringify(this.hostsInfo));
+            copy.hostsInfo.forEach((ram, index) => copy._index.set(ram.name, index));
+            return copy;
         }
     }
 }
