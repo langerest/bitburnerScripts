@@ -113,7 +113,29 @@ export namespace BatchHack
         order: number;
     }
 
-    export class Job
+    export interface IJob
+    {
+        type: JobTypeInfo;
+        host: string | null;
+        cost: number;
+    }
+
+    export class MockJob implements IJob
+    {
+        type: JobTypeInfo;
+        host: string | null = null;
+        threads: number;
+        cost: number;
+
+        constructor(type: JobTypeInfo, threads: number)
+        {
+            this.type = type;
+            this.threads = threads;
+            this.cost = this.threads * this.type.cost;
+        }
+    }
+
+    export class Job implements IJob
     {
         type: JobTypeInfo;
         host: string | null = null;
@@ -234,7 +256,12 @@ export namespace BatchHack
             return this.hostsInfo[this.hostsInfo.length - 1].ram;
         }
 
-        assign(job: Job)
+        getTotalRam()
+        {
+            return this.hostsInfo.map((host) => host.ram).reduce((a, b) => a + b);
+        }
+
+        assign(job: IJob)
         {
             let host = this.hostsInfo.find((host) => host.ram >= job.cost);
             if (host)
@@ -248,7 +275,21 @@ export namespace BatchHack
             return false;
         }
 
-        release(job: Job)
+        tryAssign(ns: NS, jobs: IJob[])
+        {
+            let copy = this.deepCopy(ns);
+            for (let job of jobs)
+            {
+                if (!copy.assign(job))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        release(job: IJob)
         {
             if (job.host === null)
             {
