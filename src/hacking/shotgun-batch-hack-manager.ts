@@ -108,6 +108,41 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
         return minScore > maxScore ? [min, minScore] : [max, maxScore];
     }
 
+    binaryCanAssignSearch(scoreFunction: (arg: number) => boolean, min: number, max: number, minScore: boolean | null = null, maxScore: boolean | null = null): number
+    {
+        if (min > max)
+        {
+            throw Error(`Binary search error. Minimum ${min} is greater than Maximum ${max}.`);
+        }
+        
+        minScore = minScore ?? scoreFunction(min);
+        if (!minScore)
+        {
+            return 0;
+        }
+
+        if (min == max)
+        {
+            return min;
+        }
+
+        maxScore = maxScore ?? scoreFunction(max);
+        if (maxScore)
+        {
+            return max;
+        }
+
+        if (max - min == 1)
+        {
+            return maxScore ? max : min;
+        }
+
+        let mid = Math.floor((min + max) / 2);
+        let midScore = scoreFunction(mid);
+
+        return midScore ? this.binaryCanAssignSearch(scoreFunction, mid, max, midScore, maxScore) : this.binaryCanAssignSearch(scoreFunction, min, mid, minScore, midScore);
+    }
+
     getJobs()
     {
         if (this.hosts === null)
@@ -146,21 +181,17 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
             let growThreads = Math.floor(this.hosts.getMaxSingleHostRam() / this.jobTypes.grow.cost);
             while (growThreads > 0)
             {
-                let scoreFunction: (arg: number) => number = (growThreads) =>
+                let canAssignFunction: (arg: number) => boolean = (growThreads) =>
                 {
                     let weakenForGrowThreads = this.computThreadsFromGrow(growThreads);
                     let growJob = new BatchHack.MockJob(this.jobTypes["grow"], growThreads);
                     let weakenForGrowJob = new BatchHack.MockJob(this.jobTypes["weakenForGrow"], weakenForGrowThreads);
-                    return (this.hosts as BatchHack.Hosts).tryAssign(this.ns, [growJob, weakenForGrowJob]) ? growThreads : 0;
+                    return (this.hosts as BatchHack.Hosts).tryAssign(this.ns, [growJob, weakenForGrowJob]);
                 };
+                
+                growThreads = this.binaryCanAssignSearch(canAssignFunction, 1, growThreads);
 
-                let score = scoreFunction(growThreads);
-                if (score == 0)
-                {
-                    [growThreads, score] = this.binarySearch(scoreFunction, 1, growThreads, null, score);
-                }
-
-                if (score == 0)
+                if (growThreads == 0)
                 {
                     break;
                 }
@@ -192,6 +223,16 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
             {
                 return;
             }
+
+            let canAssignFunction: (arg: number) => boolean = (hackThreads) =>
+            {
+                [growThreads, weakenForHackThreads, weakenForGrowThreads] = this.computeThreadsFromHack(this.targetInfo as BatchHack.TargetInfo, hackThreads);
+                let weakenForHackJob = new BatchHack.MockJob(this.jobTypes["weakenForHack"], weakenForHackThreads);
+                let weakenForGrowJob = new BatchHack.MockJob(this.jobTypes["weakenForGrow"], weakenForGrowThreads);
+                let growJob = new BatchHack.MockJob(this.jobTypes["grow"], growThreads);
+                let hackJob = new BatchHack.MockJob(this.jobTypes["hack"], hackThreads);
+                return (this.hosts as BatchHack.Hosts).tryAssign(this.ns, [growJob, hackJob, weakenForGrowJob, weakenForHackJob]);
+            };
 
             let scoreFunction: (arg: number) => number = (hackThreads) =>
             {
@@ -238,11 +279,19 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
                 if (!this.hosts.tryAssign(this.ns, jobs))
                 {
                     previousScore = score;
-                    [hackThreads, score] = this.binarySearch(scoreFunction, 1, hackThreads);
+                    hackThreads = this.binaryCanAssignSearch(canAssignFunction, 1, hackThreads);
+                    if (hackThreads == 0) 
+                    {
+                        break;
+                    }
+
+                    score = scoreFunction(hackThreads);
                     if (score == 0)
                     {
-                        return;
+                        break;
                     }
+
+                    continue;
                 }
 
                 for (let job of jobs)
