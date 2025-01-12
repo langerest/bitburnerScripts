@@ -32,6 +32,13 @@ export function purchaseServer(ns: NS, minRam: number = 32, minPercentageTotalRa
     ram = Math.pow(2, Math.ceil(Math.log2(ram)));
     ram = Math.min(ram, ns.getPurchasedServerMaxRam());
 
+    if (ram < ns.getPurchasedServerMaxRam())
+    {
+        let cost = ns.getPurchasedServerCost(ram);
+        ram *= Math.max(Math.pow(2, Math.floor(Math.log2(ns.getServerMoneyAvailable("home") / cost))), 1);
+        ram = Math.min(ram, ns.getPurchasedServerMaxRam());
+    }
+
     if (serverToUpgrade === undefined)
     {
         let hostname = ns.purchaseServer('pserv', ram);

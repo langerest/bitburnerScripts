@@ -3,7 +3,7 @@ import { deploy } from './deploy.js'
 import { listServers } from './opened-servers.js'
 
 /** @param {import("../.").NS} ns */
-export async function deployBasicHack(ns: NS, target: string, maxRam: number = 0, homeReservedRam: number = 32)
+export function deployBasicHack(ns: NS, target: string, maxRam: number = 0, homeReservedRam: number = 32)
 {
     const script = "hacking/basic-hack.js";
 
@@ -22,7 +22,7 @@ export async function deployBasicHack(ns: NS, target: string, maxRam: number = 0
 
         if (maxRam == 0 || ns.getServerMaxRam('home') - homeReservedRam < maxRam) 
         {
-            await deploy(ns, 'home', script, [target], homeReservedRam);
+            deploy(ns, 'home', script, [target], homeReservedRam);
         }
     }
 
@@ -34,7 +34,7 @@ export async function deployBasicHack(ns: NS, target: string, maxRam: number = 0
         if (!ns.isRunning(script, server, target)) 
         {
             ns.killall(server);
-            await deploy(ns, server, script, [target]);
+            deploy(ns, server, script, [target]);
         }
     }
 }

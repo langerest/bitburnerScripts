@@ -42,7 +42,8 @@ class ShotgunBatchHackManager extends BatchHack.BatchHackBase
             throw new Error("Invalid hosts.");
         }
 
-        let target = getHackTarget(this.ns, this.hosts.getMaxSingleHostRam() / this.jobTypes.hack.cost)[0].server;
+        let targets = getHackTarget(this.ns, this.hosts.getMaxSingleHostRam() / this.jobTypes.hack.cost);
+        let target = targets.length > 0 ? targets[0].server : "n00dles";
         this.targetInfo = new BatchHack.TargetInfo(this.ns, target);
     }
 

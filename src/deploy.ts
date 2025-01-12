@@ -1,7 +1,7 @@
 import { NS, ScriptArg } from "..";
 
 /** @param {import("../.").NS} ns */
-export async function deploy(ns: NS, host: string, script: string, scriptArgs: ScriptArg[], reservedRam: number = 0) 
+export function deploy(ns: NS, host: string, script: string, scriptArgs: ScriptArg[], reservedRam: number = 0) 
 {
 	if (!ns.serverExists(host)) 
 	{
@@ -29,7 +29,7 @@ export async function deploy(ns: NS, host: string, script: string, scriptArgs: S
 }
 
 /** @param {import("../.").NS} ns */
-export async function main(ns: NS) 
+export function main(ns: NS) 
 {
 	const args = ns.flags(
 		[
@@ -50,5 +50,5 @@ export async function main(ns: NS)
 	const script = (args._ as string[])[1];
 	const scriptArgs = (args._ as ScriptArg[]).slice(2);
 
-	await deploy(ns, host, script, scriptArgs);
+	deploy(ns, host, script, scriptArgs);
 }
