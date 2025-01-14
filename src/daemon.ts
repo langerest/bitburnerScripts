@@ -4,6 +4,7 @@ import { purchaseServer } from "./purchase-server.js";
 import { openedServers } from "./opened-servers.js";
 import { deployShare } from "./deploy-share";
 import { purchaseProgram } from "./program-manager";
+import { joinFaction } from "./player/player-manager";
 
 /** @param {import("..").NS} ns */
 export async function main(ns: NS) {
@@ -20,6 +21,7 @@ export async function main(ns: NS) {
         await rootAll(ns);
         purchaseServer(ns);
         purchaseProgram(ns);
+        joinFaction(ns);
         let servers = openedServers(ns).concat(["home"]);
         if (servers.filter((server) => ns.getServerMaxRam(server) >= ns.getPurchasedServerMaxRam()).length > 0)
         {

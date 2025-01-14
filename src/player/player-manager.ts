@@ -1,3 +1,5 @@
+import { AutocompleteData, NS, ScriptArg } from "../..";
+
 const factions = ["Illuminati", "Daedalus", "The Covenant", "ECorp", "MegaCorp", "Bachman & Associates", "Blade Industries", "NWO", "Clarke Incorporated", "OmniTek Incorporated",
     "Four Sigma", "KuaiGong International", "Fulcrum Secret Technologies", "BitRunners", "The Black Hand", "NiteSec", "Aevum", "Chongqing", "Ishima", "New Tokyo", "Sector-12",
     "Volhaven", "Speakers for the Dead", "The Dark Army", "The Syndicate", "Silhouette", "Tetrads", "Slum Snakes", "Netburners", "Tian Di Hui", "CyberSec", "Bladeburners"
@@ -5,12 +7,22 @@ const factions = ["Illuminati", "Daedalus", "The Covenant", "ECorp", "MegaCorp",
 
 const manualJoin = ["Sector-12", "Chongqing", "New Tokyo", "Ishima", "Aevum", "Volhaven"];
 
-export function autocomplete(data, args) {
+export function joinFaction(ns: NS)
+{
+    let factionInvites = ns.singularity.checkFactionInvitations();
+    factionInvites = factionInvites.filter(faction => !manualJoin.includes(faction));
+    for (const faction of factionInvites) 
+    {
+        ns.singularity.joinFaction(faction);
+    }
+}
+
+export function autocomplete(data: AutocompleteData, args: ScriptArg) {
     return factions;
 }
 
 /** @param {import("../..").NS} ns */
-export async function main(ns) {
+export async function main(ns: NS) {
     const faction_to_work = ns.args[0];
     var delay = 60000;
     const focus = false;
@@ -20,11 +32,7 @@ export async function main(ns) {
     const course_name = 'Study Computer Science';
     const class_name = 'studying Computer Science';
     while (true) {
-        var faction_invites = ns.checkFactionInvitations();
-        faction_invites = faction_invites.filter(f => !manualJoin.includes(f));
-        for (const faction of faction_invites) {
-            ns.joinFaction(faction);
-        }
+        joinFaction(ns);
         // var player = ns.getPlayer();
         // if (player.factions.includes(faction_to_work)) {
         //     if (player.workType != 'Working for Faction' || player.currentWorkFactionName != faction_to_work) {
