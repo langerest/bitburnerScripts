@@ -7,7 +7,7 @@ export async function main(ns: NS) {
     const batchHackScript = "hacking/shotgun-batch-hack-manager.js";
     const batchHackScrpits = [batchHackScript, "hacking/batch-hack-base.js", "hack-target-calculator.js", "opened-servers.js"];
     const purchaseServerScript = "purchase-server.js";
-    const nextDaemonScript = "daemon.js";
+    const nextDaemonScript = "daemon-early.js";
     let purchaseServerPid = 0;
     let batchHackPid = 0;
     while (ns.getServerMaxRam("home") < 32)

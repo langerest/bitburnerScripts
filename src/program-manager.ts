@@ -1,9 +1,38 @@
+import { NS } from "..";
+
+export function hasTor(ns: NS)
+{
+    return ns.scan("home").includes("darkweb");
+}
+
+export function purchaseProgram(ns: NS)
+{
+    const programs = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
+    if (!hasTor(ns) && !ns.singularity.purchaseTor())
+    {
+        return;
+    }
+
+    for (let program of programs)
+    {
+        if (ns.fileExists(program, "home"))
+        {
+            continue;
+        }
+
+        if (ns.singularity.purchaseProgram(program))
+        {
+            ns.tprint(`Purchased ${program}.`);
+        }
+    }
+}
+
 /** @param {import("../.").NS} ns
  * the purpose of the program-manager is to buy all the programs
  * from the darkweb we can afford so we don't have to do it manually
  * or write them ourselves. Like tor-manager, this script dies a natural death
  * once all programs are bought. **/
-export async function main(ns) {
+export async function main(ns: NS) {
     // const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
     // const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe"];
     const programNames = ["BruteSSH.exe", "FTPCrack.exe"];
@@ -19,8 +48,8 @@ export async function main(ns) {
         for (const prog of programNames) {
             if (!ns.fileExists(prog, 'home')) {
                 try {
-                    const succuss = ns.purchaseProgram(prog);
-                    if (succuss) {
+                    const success = ns.singularity.purchaseProgram(prog);
+                    if (success) {
                         ns.toast(`Purchased ${prog}.`);
                     } else {
                         foundMissingProgram = true;
