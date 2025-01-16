@@ -36,26 +36,12 @@ async function scan(ns: NS, parent: string, server: string, list: string[])
 
 /** @param {import("../.").NS} ns */
 export async function main(ns: NS) {
-	var servers;
-	const important_servers = ['CSEC', 'avmnite-02h', 'I.I.I.I', 'run4theh111z', 'w0r1d_d43m0n'];
+	const importantServers = ['CSEC', 'avmnite-02h', 'I.I.I.I', 'run4theh111z', 'w0r1d_d43m0n'];
 	do 
 	{
-		servers = listServers(ns);
-		servers = servers.filter(server => server != 'home' && !ns.getServer(server).backdoorInstalled && !ns.getServer(server).purchasedByPlayer);
-		var i_servers = servers.filter(server => important_servers.includes(server));
-		if (i_servers.length) 
-		{
-			await scan(ns, '', 'home', i_servers);
-			await ns.sleep(60000);
-		} 
-		else 
-		{
-			await scan(ns, '', 'home', servers);
-			if (servers.length) 
-			{
-				await ns.sleep(60000);
-			}
-		}
+		var servers = listServers(ns).filter(server => !ns.getServer(server).backdoorInstalled && importantServers.includes(server));
+		await scan(ns, "", "home", servers);
+		await ns.sleep(10000);
 	}
 	while (servers.length)
 }
