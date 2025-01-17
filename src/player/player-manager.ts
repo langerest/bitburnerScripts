@@ -2,7 +2,8 @@ import { AutocompleteData, NS, ScriptArg } from "../..";
 
 export const allFactions = ["Illuminati", "Daedalus", "The Covenant", "ECorp", "MegaCorp", "Bachman & Associates", "Blade Industries", "NWO", "Clarke Incorporated", "OmniTek Incorporated",
     "Four Sigma", "KuaiGong International", "Fulcrum Secret Technologies", "BitRunners", "The Black Hand", "NiteSec", "Aevum", "Chongqing", "Ishima", "New Tokyo", "Sector-12",
-    "Volhaven", "Speakers for the Dead", "The Dark Army", "The Syndicate", "Silhouette", "Tetrads", "Slum Snakes", "Netburners", "Tian Di Hui", "CyberSec", "Bladeburners"
+    "Volhaven", "Speakers for the Dead", "The Dark Army", "The Syndicate", "Silhouette", "Tetrads", "Slum Snakes", "Netburners", "Tian Di Hui", "CyberSec", "Bladeburners", 
+    "Church of the Machine God", "Shadows of Anarchy"
 ];
 
 const manualJoin = ["Sector-12", "Chongqing", "New Tokyo", "Ishima", "Aevum", "Volhaven"];
@@ -84,20 +85,42 @@ export function shouldReset(ns: NS)
 {
     let factions = allFactions.filter(faction => 
         {
+            let currectFavor = ns.singularity.getFactionFavor(faction);
+            let currentRep = ns.singularity.getFactionRep(faction);
             if(!hasUnboughtAugmentations(ns, faction))
             {
+                if (currectFavor < 150)
+                {
+                    return false;
+                }
+
+                let governorRepReq = ns.singularity.getAugmentationRepReq("NeuroFlux Governor") * Math.pow(1.14, 10);
+                if (ns.formulas.reputation.repFromDonation(ns.getPlayer().money / 100, ns.getPlayer()) >= governorRepReq - currentRep &&
+                    ns.getPlayer().money > ns.singularity.getAugmentationPrice("NeuroFlux Governor") * Math.pow(1.9, 10) * 15)
+                {
+                    return true;
+                }
+                
                 return false;
             }
             
             let maxRepReq = getMaxAugmentationRepReq(ns, faction);
-            let currentRep = ns.singularity.getFactionRep(faction)
             if (currentRep >= maxRepReq)
             {
                 return true;
             }
 
-            let currectFavor = ns.singularity.getFactionFavor(faction);
+            if (currectFavor >= 150 && ns.formulas.reputation.repFromDonation(ns.getPlayer().money / 100, ns.getPlayer()) >= maxRepReq - currentRep)
+            {
+                return true;
+            }
+
             let resetFavor = currectFavor + ns.singularity.getFactionFavorGain(faction);
+            if (currectFavor < 150 && resetFavor >= 150)
+            {
+                return true;
+            }
+            
             return maxRepReq / (1 + resetFavor / 100) * 1.1 < (maxRepReq - currentRep) / (1 + currectFavor / 100);
         })
 
@@ -107,8 +130,28 @@ export function shouldReset(ns: NS)
 export function reset(ns: NS)
 {
     let player = ns.getPlayer();
-    let augmentations = player.factions.map(faction => getUnboughtAugmentations(ns, faction)).reduce((a, b) => [...new Set([...a, ...b])])
+    let factions = player.factions.filter(faction => hasUnboughtAugmentations(ns, faction) && ns.singularity.getFactionRep(faction) < getMaxAugmentationRepReq(ns, faction) &&
+        ns.singularity.getFactionFavor(faction) >= 150);
+    for (let faction of factions)
+    {
+        ns.singularity.donateToFaction(faction, player.money / 100);
+    }
+
+    if (factions.length == 0)
+    {
+        factions = player.factions.filter(faction => ns.singularity.getFactionFavor(faction) >= 150)
+            .sort((a, b) => ns.singularity.getFactionFavor(b) - ns.singularity.getFactionFavor(a));
+        if (factions.length > 0)
+        {
+            ns.singularity.donateToFaction(factions[0], player.money / 100);
+        }
+    }
+
+    let augmentations = player.factions.map(faction => getUnboughtAugmentations(ns, faction)
+        .filter(augmentation => ns.singularity.getAugmentationRepReq(augmentation) <= ns.singularity.getFactionRep(faction)))
+        .reduce((a, b) => [...new Set([...a, ...b])])
         .sort((a, b) => ns.singularity.getAugmentationBasePrice(b) - ns.singularity.getAugmentationBasePrice(a));
+
     for (let augmentation of augmentations)
     {
         buyAugmentation(ns, augmentation);
@@ -122,7 +165,7 @@ export function reset(ns: NS)
     {
     }
 
-    ns.singularity.installAugmentations("start.js");
+    ns.singularity.softReset("start.js");
 }
 
 export function autocomplete(data: AutocompleteData, args: ScriptArg) {

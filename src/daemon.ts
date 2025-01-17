@@ -8,31 +8,52 @@ import { joinFaction, reset, shouldReset, work } from "./player/player-manager";
 
 /** @param {import("..").NS} ns */
 export async function main(ns: NS) {
+    const daemonScript = "daemon.js"
     const basicHackScript = "hacking/basic-hack.js";
     const batchHackScript = "hacking/shotgun-batch-hack-manager.js";
     const bitnodeMultiplierScript = "bitnode-multiplier.js";
     const backdoorScript = "backdoor.js";
     ns.disableLog("getServerMaxRam");
     ns.disableLog("scan");
+    const daemonScriptRam = ns.getScriptRam(daemonScript);
     ns.exec(bitnodeMultiplierScript, "home");
 
     while (true)
     {
         let homeReservedRam = 128;
-        if (shouldReset(ns))
+        if (ns.getServerMaxRam("home") < 128)
         {
-            reset(ns);
+            while(ns.singularity.upgradeHomeRam())
+            {
+            }
+        }
+
+        if (ns.getServerMaxRam("home") >= 128)
+        {
+            ns.ramOverride(daemonScriptRam);
+        }
+
+        if (ns.getServerMaxRam("home") >= 128)
+        {
+            if (shouldReset(ns))
+            {
+                reset(ns);
+            }
         }
 
         await rootAll(ns);
         purchaseServer(ns);
         purchaseProgram(ns);
-        joinFaction(ns);
-        work(ns);
 
-        if (!ns.scriptRunning(backdoorScript, "home"))
+        if (ns.getServerMaxRam("home") >= 128)
         {
-            ns.exec(backdoorScript, "home", {temporary: true});
+            joinFaction(ns);
+            work(ns);
+
+            if (!ns.scriptRunning(backdoorScript, "home"))
+            {
+                ns.exec(backdoorScript, "home", {temporary: true});
+            }
         }
 
         let servers = openedServers(ns).concat(["home"]);

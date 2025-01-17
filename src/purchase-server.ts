@@ -3,7 +3,6 @@ import { openedServers } from "./opened-servers.js";
 
 export function purchaseServer(ns: NS, minRam: number = 32, minPercentageTotalRam: number = 0.1)
 {
-    ns.disableLog("getServerMaxRam");
     if (minRam > ns.getPurchasedServerMaxRam())
     {
         ns.tprint(`Minimum ram requested for new server ${minRam} GB exceeds the maximum allowed ram for purchased server ${ns.getPurchasedServerMaxRam()} GB. Aborting`);
