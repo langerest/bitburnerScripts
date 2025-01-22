@@ -31,16 +31,16 @@ export function autocomplete(data: AutocompleteData, args: ScriptArg)
 export async function main(ns: NS) {
     const args = ns.flags(argSchema);
     const maxRam = args['maxRam'] as number;
-    const keepRuning = args['keepRuning'] as boolean;
+    const keepRunning = args['keepRunning'] as boolean;
     const sleepInterval = 10000;
 
     do
     {
         deployShare(ns, maxRam);
-        if (keepRuning)
+        if (keepRunning)
         {
             await ns.sleep(sleepInterval);
         }
     }
-    while(keepRuning)
+    while(keepRunning)
 }

@@ -1,4 +1,6 @@
-import { NS } from "..";
+import { AutocompleteData, NS, ScriptArg } from "..";
+
+const programs = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
 
 export function hasTor(ns: NS)
 {
@@ -6,8 +8,7 @@ export function hasTor(ns: NS)
 }
 
 export function purchaseProgram(ns: NS)
-{
-    const programs = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
+{   
     if (!hasTor(ns) && !ns.singularity.purchaseTor())
     {
         return;
@@ -27,40 +28,35 @@ export function purchaseProgram(ns: NS)
     }
 }
 
+const argSchema = 
+[
+    ["keepRunning", true]
+] as [string, ScriptArg | string[]][];
+
+export function autocomplete(data: AutocompleteData, args: ScriptArg) 
+{
+    data.flags(argSchema);
+    return [];
+}
+
 /** @param {import("../.").NS} ns
  * the purpose of the program-manager is to buy all the programs
  * from the darkweb we can afford so we don't have to do it manually
  * or write them ourselves. Like tor-manager, this script dies a natural death
  * once all programs are bought. **/
 export async function main(ns: NS) {
-    // const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
-    // const programNames = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe"];
-    const programNames = ["BruteSSH.exe", "FTPCrack.exe"];
-    const interval = 10000;
+    const args = ns.flags(argSchema);
+    const keepRunning = args['keepRunning'] as boolean;
+    const sleepInterval = 10000;
 
-    const keepRunning = ns.args.length > 0 && ns.args[0] == "-c";
-    var foundMissingProgram;
-    if (!keepRunning)
-        ns.print(`program-manager will run once. Run with argument "-c" to run continuously.`)
-
-    do {
-        foundMissingProgram = false;
-        for (const prog of programNames) {
-            if (!ns.fileExists(prog, 'home')) {
-                try {
-                    const success = ns.singularity.purchaseProgram(prog);
-                    if (success) {
-                        ns.toast(`Purchased ${prog}.`);
-                    } else {
-                        foundMissingProgram = true;
-                    }
-                } catch (error) {
-                    ns.print(error);
-                    foundMissingProgram = true;
-                }
-            }
-        }
+    do 
+    {
+        purchaseProgram(ns)
+        var foundMissingProgram = programs.filter(program => !ns.fileExists(program, "home")).length == 0;
         if (keepRunning && foundMissingProgram)
-            await ns.sleep(interval);
-    } while (keepRunning && foundMissingProgram);
+        {
+            await ns.sleep(sleepInterval);
+        }
+    } 
+    while (keepRunning && foundMissingProgram);
 }

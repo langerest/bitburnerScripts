@@ -5,69 +5,226 @@ import { openedServers } from "./opened-servers.js";
 import { deployShare } from "./deploy-share";
 import { purchaseProgram } from "./program-manager";
 import { joinFaction, reset, shouldReset, work } from "./player/player-manager";
+import { Module } from "./module";
 
-/** @param {import("..").NS} ns */
-export async function main(ns: NS) {
-    const daemonScript = "daemon.js"
-    const basicHackScript = "hacking/basic-hack.js";
-    const batchHackScript = "hacking/shotgun-batch-hack-manager.js";
-    const bitnodeMultiplierScript = "bitnode-multiplier.js";
-    const backdoorScript = "backdoor.js";
-    ns.disableLog("getServerMaxRam");
-    ns.disableLog("scan");
-    const daemonScriptRam = ns.getScriptRam(daemonScript);
-    ns.exec(bitnodeMultiplierScript, "home");
+class Daemon
+{
+    static script = "daemon.js";
+    private scriptTotalRam: number;
+    private currentRam: number;
+    homeReservedRam: number;
+    modules: Module[] = [];
 
-    while (true)
+    constructor(ns: NS)
     {
-        let homeReservedRam = 128;
-        if (ns.getServerMaxRam("home") < 128)
+        this.scriptTotalRam = ns.getScriptRam(Daemon.script);
+        this.currentRam = 17.8;
+        this.homeReservedRam = 128;
+        this.modules.push(new UpgradeHomeRamModule(128));
+        this.modules.push(new ResetModule());
+        this.modules.push(new GeneralModule(rootAll));
+        this.modules.push(new GeneralModule(purchaseServer));
+        this.modules.push(new GeneralModule(purchaseProgram));
+        this.modules.push(new PlayerModule());
+        this.modules.push(new BackdoorModule());
+        this.modules.push(new ShareModule(64));
+        this.modules.push(new HackModule(this.homeReservedRam));
+    }
+
+    async runModule(ns: NS, module: Module)
+    {
+        if (!module.isLoaded)
         {
-            while(ns.singularity.upgradeHomeRam())
+            if (!module.shouldload(ns, this.currentRam, this.scriptTotalRam))
             {
+                return;
             }
+
+            this.currentRam = Math.min(this.currentRam + module.ram, this.scriptTotalRam);
+            ns.ramOverride(this.currentRam);
+            module.load(ns);
         }
 
-        if (ns.getServerMaxRam("home") >= 128)
+        if (module.shouldExecute(ns))
         {
-            ns.ramOverride(daemonScriptRam);
+            await module.execute(ns);
         }
+    }
 
-        if (ns.getServerMaxRam("home") >= 128)
+    async execute(ns: NS)
+    {
+        for (let module of this.modules)
         {
-            if (shouldReset(ns))
-            {
-                reset(ns);
-            }
-        }
-
-        await rootAll(ns);
-        purchaseServer(ns);
-        purchaseProgram(ns);
-
-        if (ns.getServerMaxRam("home") >= 128)
-        {
-            joinFaction(ns);
-            work(ns);
-
-            if (!ns.scriptRunning(backdoorScript, "home"))
-            {
-                ns.exec(backdoorScript, "home", {temporary: true});
-            }
-        }
-
-        let servers = openedServers(ns).concat(["home"]);
-        if (servers.filter((server) => ns.getServerMaxRam(server) >= ns.getPurchasedServerMaxRam()).length > 0)
-        {
-            deployShare(ns, 64);
-        }
-
-        if (!ns.scriptRunning(batchHackScript, "home"))
-        {
-            servers.map(server => ns.scriptKill(basicHackScript, server));
-            var pid = ns.exec(batchHackScript, "home", {temporary: true}, "--homeReservedRam", homeReservedRam);
+            await this.runModule(ns, module);
         }
 
         await ns.asleep(10000);
+    }
+}
+
+class GeneralModule extends Module
+{
+    onExecute: (ns: NS) => void | Promise <void>
+
+    constructor(onExecute: (ns: NS) => void | Promise <void>)
+    {
+        const ram = 0;
+        super(ram);
+        this.onExecute = onExecute;
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return true;
+    }
+
+    async execute(ns: NS)
+    {
+        await this.onExecute(ns);
+    }
+}
+
+class UpgradeHomeRamModule extends Module
+{
+    targetRam: number;
+
+    constructor(targetRam: number)
+    {
+        const ram = 0;
+        super(ram);
+        this.targetRam = targetRam;
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return ns.getServerMaxRam("home") < this.targetRam;
+    }
+
+    execute(ns: NS)
+    {
+        while(ns.singularity.upgradeHomeRam())
+        {
+        }
+    }
+}
+
+
+class ResetModule extends Module
+{
+    constructor()
+    {
+        const ram = 64;
+        super(ram);
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return shouldReset(ns);
+    }
+
+    execute(ns: NS)
+    {
+        reset(ns);
+    }
+}
+
+class PlayerModule extends Module
+{
+    constructor()
+    {
+        const ram = 64;
+        super(ram);
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return true;
+    }
+
+    execute(ns: NS)
+    {
+        joinFaction(ns);
+        work(ns);
+    }
+}
+
+class BackdoorModule extends Module
+{
+    static script = "backdoor.js";
+    pid: number = 0;
+
+    constructor()
+    {
+        const ram = 64;
+        super(ram);
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return !ns.scriptRunning(BackdoorModule.script, "home");
+    }
+
+    execute(ns: NS)
+    {
+        this.pid = ns.exec(BackdoorModule.script, "home", {temporary: true});
+    }
+}
+
+class ShareModule extends Module
+{
+    maxRam: number;
+
+    constructor(maxRam: number)
+    {
+        const ram = 0;
+        super(ram);
+        this.maxRam = maxRam;
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        let servers = openedServers(ns).concat(["home"]);
+        return servers.filter((server) => ns.getServerMaxRam(server) >= ns.getPurchasedServerMaxRam()).length > 0;
+    }
+
+    execute(ns: NS)
+    {
+        deployShare(ns, this.maxRam);
+    }
+}
+
+class HackModule extends Module
+{
+    static script = "hacking/shotgun-batch-hack-manager.js";
+    pid: number = 0;
+    homeReservedRam: number;
+
+    constructor(homeReservedRam: number)
+    {
+        const ram = 0;
+        super(ram);
+        this.homeReservedRam = homeReservedRam;
+    }
+
+    shouldExecute(ns: NS): boolean 
+    {
+        return !ns.scriptRunning(HackModule.script, "home");
+    }
+
+    execute(ns: NS)
+    {
+        this.pid = ns.exec(HackModule.script, "home", {temporary: true}, "--homeReservedRam", this.homeReservedRam);
+    }
+}
+
+
+/** @param {import("..").NS} ns */
+export async function main(ns: NS) {
+    ns.disableLog("getServerMaxRam");
+    ns.disableLog("scan");
+    let daemon = new Daemon(ns);
+    while (true)
+    {
+        await daemon.execute(ns);
     }
 }

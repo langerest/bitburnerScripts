@@ -76,13 +76,13 @@ export async function main(ns: NS)
     const args = ns.flags(argSchema);
     const minRam = args['minRam'] as number;
     const minPercentageTotalRam = args['minPercentageTotalRam'] as number;
-    const keepRuning = args['keepRuning'] as boolean;
+    const keepRunning = args['keepRunning'] as boolean;
     const sleepInterval = 10000;
 
     do
     {
         purchaseServer(ns, minRam, minPercentageTotalRam);
-        if (keepRuning)
+        if (keepRunning)
         {
             let purchasedServers = ns.getPurchasedServers();
             if (purchasedServers.filter(server => ns.getServerMaxRam(server) >= ns.getPurchasedServerMaxRam()).length >= ns.getPurchasedServerLimit())
@@ -94,5 +94,5 @@ export async function main(ns: NS)
             await ns.sleep(sleepInterval);
         }
     }
-    while(keepRuning)
+    while(keepRunning)
 }
